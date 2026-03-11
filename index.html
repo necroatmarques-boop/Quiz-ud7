@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz UD5 Respiratorio y Circulatorio</title>
+<title>Quiz UD6 Aparato Digestivo</title>
 
 <style>
 body { font-family: Arial, sans-serif; background:#f2f2f2; padding:15px; }
 h1 { text-align:center; }
 
-/* TOP BAR */
 #topbar {
   display:flex;
   align-items:center;
@@ -38,7 +37,6 @@ h1 { text-align:center; }
   text-align:right;
 }
 
-/* QUIZ */
 .card { background:#fff; padding:15px; border-radius:10px; margin-bottom:15px; }
 
 button {
@@ -61,7 +59,7 @@ button.incorrect { background:#dc3545 !important; }
 
 <body>
 
-<h1>🫁❤️ Quiz UD5</h1>
+<h1>🍽️ Quiz Aparato Digestivo</h1>
 
 <div id="topbar">
   <div id="progress"></div>
@@ -74,114 +72,131 @@ button.incorrect { background:#dc3545 !important; }
 const POR_PARTIDA = 20;
 const TIEMPO_TOTAL = 20 * 60;
 
-/* ==================== PREGUNTAS (TODAS) ==================== */
 const preguntas = [
-{q:"Función principal del aparato respiratorio",o:["Captar oxígeno","Eliminar nutrientes","Regular la presión"],c:0},
-{q:"Unidad funcional del pulmón",o:["Bronquiolo","Alvéolo","Bronquio"],c:1},
-{q:"Conducto común a digestivo y respiratorio",o:["Laringe","Faringe","Tráquea"],c:1},
-{q:"Órgano de la fonación",o:["Faringe","Laringe","Nariz"],c:1},
-{q:"Cartílago que evita el paso de alimentos a la tráquea",o:["Cricoides","Epiglotis","Tiroides"],c:1},
-{q:"Estructuras que calientan y humidifican el aire",o:["Pulmones","Fosas nasales","Bronquios"],c:1},
-{q:"Punto de bifurcación de la tráquea",o:["Hilio","Carina","Pleura"],c:1},
-{q:"Conductos que penetran en los pulmones",o:["Bronquios","Bronquiolos","Alvéolos"],c:0},
-{q:"Lugar del intercambio gaseoso",o:["Bronquios","Alvéolos","Tráquea"],c:1},
-{q:"Músculo principal de la inspiración",o:["Intercostales","Diafragma","Abdominal"],c:1},
-{q:"Movimiento pasivo de la respiración",o:["Inspiración","Espiración","Ventilación"],c:1},
-{q:"Frecuencia respiratoria normal adulta",o:["8–12","14–20","20–30"],c:1},
-{q:"Transporte de gases en sangre",o:["Plasma","Hemoglobina","Leucocitos"],c:1},
-{q:"Proceso regulado por presiones parciales",o:["Ventilación","Difusión gaseosa","Respiración celular"],c:1},
-{q:"Proceso metabólico en mitocondrias",o:["Ventilación","Respiración celular","Difusión"],c:1},
-{q:"Sangre que llega a alvéolos",o:["Rica en O₂","Rica en CO₂","Sin gases"],c:1},
-{q:"Sangre que sale de alvéolos",o:["Rica en CO₂","Rica en O₂","Sin gases"],c:1},
-{q:"Centro regulador respiratorio",o:["Corteza","Tronco encefálico","Cerebelo"],c:1},
-{q:"Control respiratorio consciente",o:["Autónomo","Voluntario","Reflejo"],c:1},
-{q:"Control respiratorio involuntario",o:["Voluntario","Autónomo","Somático"],c:1},
-{q:"Función del moco respiratorio",o:["Oxigenar","Atrapar partículas","Producir voz"],c:1},
-{q:"Células que mueven el moco",o:["Epiteliales","Ciliadas","Musculares"],c:1},
-{q:"Cavidades que drenan en fosas nasales",o:["Senos paranasales","Alvéolos","Bronquios"],c:0},
-{q:"Lóbulos pulmón derecho",o:["2","3","4"],c:1},
-{q:"Membrana que recubre pulmones",o:["Peritoneo","Pleura","Endocardio"],c:1},
 
-{q:"Enfermedad respiratoria crónica por tabaco",o:["Asma","EPOC","Neumonía"],c:1},
-{q:"Destrucción de alvéolos",o:["Asma","Enfisema","Bronquitis"],c:1},
-{q:"Tos productiva crónica",o:["Asma","Bronquitis crónica","Neumonía"],c:1},
-{q:"Obstrucción reversible vías aéreas",o:["EPOC","Asma","Fibrosis"],c:1},
-{q:"Síntomas de crisis asmática",o:["Tos y disnea","Fiebre","Edema"],c:0},
-{q:"Definición insuficiencia respiratoria",o:["Fallo ventilatorio","Intercambio ineficaz","Dolor torácico"],c:1},
-{q:"PaO₂ que indica hipoxemia",o:["<80","<60","<40"],c:1},
-{q:"IR con PaCO₂ elevada",o:["Parcial","Hipercápnica","Crónica"],c:1},
-{q:"IR instaurada en horas",o:["Crónica","Aguda","Parcial"],c:1},
-{q:"Inflamación de la pleura",o:["Neumotórax","Pleuritis","Empiema"],c:1},
-{q:"Líquido en cavidad pleural",o:["Hemotórax","Derrame pleural","Neumotórax"],c:1},
-{q:"Aire en cavidad pleural",o:["Neumotórax","Hemotórax","Empiema"],c:0},
-{q:"Sangre en cavidad pleural",o:["Empiema","Hemotórax","Quilotórax"],c:1},
-{q:"Neumonía por inhalación de contenido gástrico",o:["Lobular","Por aspiración","Intersticial"],c:1},
-{q:"Neumonía que afecta bronquios y pulmones",o:["Lobular","Bronconeumonía","Intersticial"],c:1},
-{q:"Infección vírica respiratoria aguda",o:["Resfriado","Gripe","Neumonía"],c:1},
-{q:"Virus que infecta humanos y animales",o:["Influenza A","Influenza B","Influenza C"],c:0},
-{q:"Tumor pleural por amianto",o:["Mesotelioma","Carcinoma","Sarcoma"],c:0},
-{q:"Cáncer pulmonar más frecuente",o:["Adenocarcinoma","Escamoso","Células grandes"],c:0},
+{q:"¿Qué es el aparato digestivo?",o:["Conjunto de órganos que transforman alimentos en nutrientes","Sistema que bombea sangre","Sistema respiratorio"],c:0},
+{q:"¿Función principal del aparato digestivo?",o:["Obtener nutrientes de los alimentos","Transportar oxígeno","Filtrar sangre"],c:0},
+{q:"¿Procesos del aparato digestivo?",o:["Ingestión digestión absorción eliminación","Ventilación difusión perfusión","Filtración secreción excreción"],c:0},
+{q:"¿Partes principales del aparato digestivo?",o:["Tubo digestivo y glándulas anejas","Pulmones y bronquios","Corazón y vasos"],c:0},
+{q:"¿Qué es el tubo digestivo?",o:["Conducto desde boca hasta ano","Glándula endocrina","Sistema nervioso"],c:0},
+{q:"¿Qué son las glándulas anejas?",o:["Órganos que producen jugos digestivos","Pulmones","Huesos"],c:0},
 
-{q:"Equipo que mide saturación O₂",o:["Capnógrafo","Pulsioxímetro","Respirador"],c:1},
-{q:"SpO₂ normal",o:["85–90%","90–94%","95–100%"],c:2},
-{q:"Equipo que mide CO₂ espirado",o:["Capnógrafo","Nebulizador","Respirador"],c:0},
-{q:"Equipo de ventilación mecánica",o:["Nebulizador","Respirador","Concentrador"],c:1},
-{q:"Equipo que genera aerosol",o:["Nebulizador","Capnógrafo","Respirador"],c:0},
-{q:"Equipo que obtiene O₂ del aire",o:["Botella","Concentrador","Respirador"],c:1},
-{q:"Parámetro del pulsioxímetro",o:["PaO₂","SpO₂","PaCO₂"],c:1},
-{q:"Uso principal del respirador",o:["Oxigenar","Ventilar","Humidificar"],c:1},
-{q:"Uso del nebulizador",o:["Ventilar","Administrar fármacos","Medir gases"],c:1},
-{q:"Uso del capnógrafo",o:["Medir O₂","Medir CO₂","Ventilar"],c:1},
-{q:"Oxigenoterapia domiciliaria",o:["Botella","Concentrador","Respirador"],c:1},
-{q:"Equipo UCI respiratoria",o:["Nebulizador","Respirador","Fonendo"],c:1},
-{q:"Parámetro medido en mmHg",o:["SpO₂","PaO₂","FC"],c:1},
-{q:"Monitorización respiratoria continua",o:["Capnografía","ECG","Holter"],c:0},
-{q:"Aparato para humidificar oxígeno",o:["Humidificador","Respirador","Capnógrafo"],c:0},
+{q:"¿Longitud aproximada del tubo digestivo?",o:["8-9 metros","2 metros","20 metros"],c:0},
+{q:"¿Dónde comienza el tubo digestivo?",o:["Boca","Faringe","Estómago"],c:0},
+{q:"¿Dónde termina el tubo digestivo?",o:["Ano","Recto","Colon"],c:0},
+{q:"¿Función de la boca en digestión?",o:["Iniciar digestión","Respirar","Filtrar sangre"],c:0},
+{q:"¿Qué ocurre en cavidad bucal?",o:["Masticación y mezcla con saliva","Intercambio gaseoso","Filtración renal"],c:0},
+{q:"¿Qué es la masticación?",o:["Trituración de alimentos","Absorción intestinal","Respiración"],c:0},
+{q:"¿Función de la lengua?",o:["Mover alimentos y formar bolo","Respirar","Bombear sangre"],c:0},
+{q:"¿Qué hacen los dientes?",o:["Cortar triturar desgarrar alimentos","Respirar","Producir enzimas"],c:0},
+{q:"¿Qué es el bolo alimenticio?",o:["Masa de alimento triturado con saliva","Jugo gástrico","Heces"],c:0},
 
-{q:"Función aparato cardiovascular",o:["Eliminar toxinas","Transportar sangre","Regular respiración"],c:1},
-{q:"Localización del corazón",o:["Abdomen","Mediastino","Pulmón"],c:1},
-{q:"Capa externa del corazón",o:["Miocardio","Pericardio","Endocardio"],c:1},
-{q:"Capa muscular cardíaca",o:["Endocardio","Miocardio","Pericardio"],c:1},
-{q:"Capa interna del corazón",o:["Pericardio","Endocardio","Miocardio"],c:1},
-{q:"Número de cavidades cardíacas",o:["2","3","4"],c:2},
-{q:"Válvula AD–VD",o:["Mitral","Tricúspide","Pulmonar"],c:1},
-{q:"Válvula AI–VI",o:["Tricúspide","Mitral","Aórtica"],c:1},
-{q:"Válvulas semilunares",o:["Mitral y tricúspide","Aórtica y pulmonar","Cavas"],c:1},
-{q:"Arteria del ventrículo izquierdo",o:["Pulmonar","Aorta","Cava"],c:1},
-{q:"Arteria del ventrículo derecho",o:["Aorta","Pulmonar","Cava"],c:1},
-{q:"Marcapasos fisiológico",o:["Nodo AV","Nodo SA","Haz de His"],c:1},
-{q:"Fase de contracción cardíaca",o:["Diástole","Sístole","Reposo"],c:1},
-{q:"Fase de relajación cardíaca",o:["Sístole","Diástole","Bloqueo"],c:1},
-{q:"Definición de ciclo cardiaco",o:["Un latido","Una contracción","Sístole+diástole"],c:2},
+{q:"¿Qué es la faringe?",o:["Conducto que conecta boca con esófago","Glándula digestiva","Pulmón"],c:0},
+{q:"¿Función de la faringe?",o:["Paso del bolo alimenticio","Respiración celular","Absorción"],c:0},
+{q:"¿Qué es el esófago?",o:["Tubo que transporta alimento al estómago","Pulmón","Riñón"],c:0},
+{q:"¿Longitud aproximada del esófago?",o:["25 cm","5 cm","1 metro"],c:0},
+{q:"¿Función del esófago?",o:["Transportar bolo alimenticio","Respirar","Filtrar sangre"],c:0},
+{q:"¿Movimiento que impulsa alimento?",o:["Peristaltismo","Ventilación","Difusión"],c:0},
+{q:"¿Qué es el peristaltismo?",o:["Contracciones musculares del tubo digestivo","Intercambio gaseoso","Producción hormonal"],c:0},
 
-{q:"Vasos que salen del corazón",o:["Venas","Arterias","Capilares"],c:1},
-{q:"Vasos que llegan al corazón",o:["Arterias","Venas","Capilares"],c:1},
-{q:"Vasos de intercambio",o:["Arterias","Venas","Capilares"],c:2},
-{q:"Circulación sistémica",o:["Pulmones","Tejidos","Corazón"],c:1},
-{q:"Circulación pulmonar",o:["Oxigena sangre","Nutre tejidos","Drena linfa"],c:0},
-{q:"Vena de miembros inferiores",o:["Cava sup.","Cava inf.","Pulmonar"],c:1},
-{q:"Presión máxima cardiaca",o:["Diastólica","Sistólica","Media"],c:1},
-{q:"Presión mínima cardiaca",o:["Sistólica","Diastólica","Media"],c:1},
-{q:"TA normal",o:["90/60–120/80","100/50–140/95","140/90–160/100"],c:1},
-{q:"Hipertensión arterial",o:["TA baja","TA elevada mantenida","Arritmia"],c:1},
-{q:"Frecuencia cardiaca normal",o:["40–60","60–100","100–140"],c:1},
-{q:"FC >100 lpm",o:["Bradicardia","Taquicardia","Arritmia"],c:1},
-{q:"FC <60 lpm",o:["Taquicardia","Bradicardia","Isquemia"],c:1},
-{q:"Alteración del ritmo",o:["Isquemia","Arritmia","Estenosis"],c:1},
-{q:"Disminución riego coronario",o:["Infarto","Cardiopatía isquémica","Arritmia"],c:1},
-{q:"Muerte del miocardio",o:["Angina","Infarto","Arritmia"],c:1},
-{q:"Válvula que no abre bien",o:["Insuficiencia","Estenosis","Bloqueo"],c:1},
-{q:"Válvula que no cierra bien",o:["Estenosis","Insuficiencia","Isquemia"],c:1},
-{q:"Equipo ECG",o:["Holter","ECG","Desfibrilador"],c:1},
-{q:"Monitorización 24–48h",o:["ECG","Holter","Pulsioxímetro"],c:1},
-{q:"Equipo descarga eléctrica",o:["Marcapasos","Desfibrilador","ECG"],c:1},
-{q:"Equipo automático TA",o:["Fonendo","Esfigmomanómetro","ECG"],c:1},
-{q:"Pulso se mide en",o:["mmHg","lpm","%"],c:1},
-{q:"Placas de ateroma",o:["Trombosis","Arteriosclerosis","Embolia"],c:1},
-{q:"Formación de trombos y émbolos",o:["HTA","Enfermedad tromboembólica","Arritmia"],c:1}
+{q:"¿Qué es el estómago?",o:["Órgano donde continúa digestión","Pulmón","Riñón"],c:0},
+{q:"¿Función del estómago?",o:["Mezclar alimento con jugo gástrico","Respirar","Filtrar sangre"],c:0},
+{q:"¿Qué es el jugo gástrico?",o:["Líquido digestivo del estómago","Hormona","Gas"],c:0},
+{q:"¿Qué contiene el jugo gástrico?",o:["Ácido clorhídrico enzimas moco","Oxígeno","Sales"],c:0},
+{q:"¿Función del ácido clorhídrico?",o:["Destruir bacterias y descomponer alimentos","Respirar","Bombear sangre"],c:0},
+{q:"¿Qué es la pepsina?",o:["Enzima que digiere proteínas","Hormona","Mineral"],c:0},
+{q:"¿Qué es el quimo?",o:["Mezcla semilíquida del estómago","Bolo alimenticio","Heces"],c:0},
+
+{q:"¿Qué es el intestino delgado?",o:["Órgano donde se absorben nutrientes","Pulmón","Riñón"],c:0},
+{q:"¿Función intestino delgado?",o:["Absorción nutrientes","Respiración","Filtración"],c:0},
+{q:"¿Partes intestino delgado?",o:["Duodeno yeyuno íleon","Colon recto ano","Bronquios"],c:0},
+{q:"¿Qué es el duodeno?",o:["Primera parte intestino delgado","Última parte","Glándula"],c:0},
+{q:"¿Qué es el yeyuno?",o:["Parte media intestino delgado","Parte del colon","Pulmón"],c:0},
+{q:"¿Qué es el íleon?",o:["Última parte intestino delgado","Primera parte","Riñón"],c:0},
+{q:"¿Qué son vellosidades intestinales?",o:["Estructuras que aumentan absorción","Glándulas","Bronquios"],c:0},
+{q:"¿Función vellosidades?",o:["Absorber nutrientes","Respirar","Producir bilis"],c:0},
+
+{q:"¿Qué es intestino grueso?",o:["Parte final digestiva","Pulmón","Riñón"],c:0},
+{q:"¿Función intestino grueso?",o:["Absorber agua","Respirar","Filtrar sangre"],c:0},
+{q:"¿Partes intestino grueso?",o:["Ciego colon recto ano","Duodeno yeyuno íleon","Bronquios"],c:0},
+{q:"¿Qué es el colon?",o:["Parte principal intestino grueso","Pulmón","Glándula"],c:0},
+{q:"¿Función colon?",o:["Absorber agua","Respirar","Bombear sangre"],c:0},
+{q:"¿Qué es el recto?",o:["Parte que almacena heces","Glándula","Pulmón"],c:0},
+{q:"¿Función recto?",o:["Almacenar heces","Respirar","Filtrar sangre"],c:0},
+{q:"¿Qué es el ano?",o:["Abertura final digestiva","Glándula","Vaso"],c:0},
+
+{q:"¿Qué son glándulas anejas?",o:["Órganos que producen secreciones digestivas","Pulmones","Huesos"],c:0},
+{q:"¿Qué órganos forman glándulas anejas?",o:["Salivales hígado páncreas","Pulmones riñones","Corazón vasos"],c:0},
+
+{q:"¿Qué son glándulas salivales?",o:["Glándulas que producen saliva","Pulmones","Riñones"],c:0},
+{q:"¿Función saliva?",o:["Humedecer alimentos e iniciar digestión","Respirar","Filtrar sangre"],c:0},
+{q:"¿Enzima saliva?",o:["Amilasa","Pepsina","Lipasa"],c:0},
+
+{q:"¿Qué es el hígado?",o:["Órgano que produce bilis","Pulmón","Riñón"],c:0},
+{q:"¿Función digestiva hígado?",o:["Producir bilis","Respirar","Filtrar sangre"],c:0},
+{q:"¿Qué es bilis?",o:["Sustancia que ayuda digerir grasas","Hormona","Gas"],c:0},
+{q:"¿Función bilis?",o:["Emulsionar grasas","Respirar","Bombear sangre"],c:0},
+
+{q:"¿Qué es vesícula biliar?",o:["Órgano que almacena bilis","Pulmón","Riñón"],c:0},
+{q:"¿Función vesícula biliar?",o:["Liberar bilis al intestino","Respirar","Filtrar sangre"],c:0},
+
+{q:"¿Qué es el páncreas?",o:["Glándula que produce enzimas digestivas","Pulmón","Riñón"],c:0},
+{q:"¿Función digestiva páncreas?",o:["Secretar jugo pancreático","Respirar","Filtrar sangre"],c:0},
+{q:"¿Qué es jugo pancreático?",o:["Líquido con enzimas digestivas","Hormona","Gas"],c:0},
+
+{q:"¿Qué es digestión?",o:["Proceso de transformar alimentos en nutrientes","Respiración","Circulación"],c:0},
+{q:"¿Tipos digestión?",o:["Mecánica y química","Pulmonar","Cardíaca"],c:0},
+{q:"¿Digestión mecánica?",o:["Trituración física alimentos","Acción enzimas","Absorción"],c:0},
+{q:"¿Digestión química?",o:["Acción enzimas digestivas","Movimiento muscular","Respiración"],c:0},
+{q:"¿Función enzimas digestivas?",o:["Romper moléculas grandes","Transportar sangre","Producir oxígeno"],c:0},
+
+{q:"¿Qué es absorción?",o:["Paso nutrientes a sangre","Respiración","Circulación"],c:0},
+{q:"¿Dónde ocurre absorción?",o:["Intestino delgado","Estómago","Recto"],c:0},
+{q:"¿Estructuras absorción?",o:["Vellosidades intestinales","Bronquios","Alvéolos"],c:0},
+{q:"¿Nutrientes absorbidos?",o:["Glucosa aminoácidos ácidos grasos","Oxígeno","Hormonas"],c:0},
+
+{q:"¿Qué es malnutrición?",o:["Falta o exceso nutrientes","Respiración","Circulación"],c:0},
+{q:"¿Causas malnutrición?",o:["Dieta inadecuada","Respirar","Dormir"],c:0},
+{q:"¿Consecuencias malnutrición?",o:["Problemas salud","Mayor oxígeno","Más energía"],c:0},
+
+{q:"¿Qué son trastornos alimentarios?",o:["Alteraciones comportamiento alimentario","Enfermedades pulmonares","Cardíacas"],c:0},
+{q:"¿Factores trastornos alimentarios?",o:["Psicológicos sociales biológicos","Respiratorios","Cardíacos"],c:0},
+
+{q:"¿Qué es anorexia?",o:["Restricción extrema alimentos","Exceso comida","Enfermedad pulmonar"],c:0},
+{q:"¿Característica anorexia?",o:["Miedo intenso ganar peso","Respiración rápida","Dolor torácico"],c:0},
+{q:"¿Riesgos anorexia?",o:["Desnutrición grave","Mayor energía","Mejor digestión"],c:0},
+
+{q:"¿Qué es bulimia?",o:["Atracones y conductas compensatorias","Respiración lenta","Dolor muscular"],c:0},
+{q:"¿Comportamiento bulimia?",o:["Atracones y vómitos","Ejercicio","Dormir"],c:0},
+{q:"¿Consecuencias bulimia?",o:["Problemas digestivos","Más oxígeno","Mayor absorción"],c:0},
+
+{q:"¿Qué es reflujo gastroesofágico?",o:["Paso contenido estómago al esófago","Respiración","Circulación"],c:0},
+{q:"¿Causa reflujo?",o:["Debilidad esfínter esofágico","Pulmones","Riñones"],c:0},
+{q:"¿Síntoma reflujo?",o:["Ardor o acidez","Tos","Dolor muscular"],c:0},
+
+{q:"¿Qué es gastritis?",o:["Inflamación estómago","Pulmón","Riñón"],c:0},
+{q:"¿Causas gastritis?",o:["Infecciones o irritación","Respirar","Dormir"],c:0},
+{q:"¿Qué es úlcera gástrica?",o:["Lesión pared estómago","Gas","Hormona"],c:0},
+{q:"¿Bacteria úlcera?",o:["Helicobacter pylori","E.coli","Salmonella"],c:0},
+
+{q:"¿Qué es diarrea?",o:["Evacuación líquida frecuente","Respiración rápida","Dolor muscular"],c:0},
+{q:"¿Qué es estreñimiento?",o:["Dificultad evacuar","Respiración lenta","Dolor torácico"],c:0},
+{q:"¿Qué es apendicitis?",o:["Inflamación del apéndice","Pulmón","Riñón"],c:0},
+{q:"¿Qué es enfermedad Crohn?",o:["Enfermedad inflamatoria intestinal","Pulmonar","Renal"],c:0},
+{q:"¿Qué es colitis ulcerosa?",o:["Inflamación crónica colon","Pulmonar","Renal"],c:0},
+
+{q:"¿Qué es cáncer de colon?",o:["Tumor maligno intestino grueso","Pulmonar","Renal"],c:0},
+{q:"¿Factor riesgo cáncer colon?",o:["Dieta pobre en fibra","Ejercicio","Hidratación"],c:0},
+{q:"¿Síntoma cáncer colon?",o:["Sangre en heces","Tos","Dolor muscular"],c:0},
+{q:"¿Prevención cáncer colon?",o:["Dieta saludable","Fumar","Sedentarismo"],c:0},
+
+{q:"¿Función digestión?",o:["Obtener energía y nutrientes","Respirar","Bombear sangre"],c:0},
+{q:"¿Importancia absorción?",o:["Permite utilizar nutrientes","Respirar mejor","Producir sangre"],c:0},
+{q:"¿Relación alimentación salud digestiva?",o:["Dieta equilibrada mejora digestión","Respirar más","Dormir más"],c:0},
+{q:"¿Hábitos aparato digestivo saludable?",o:["Dieta equilibrada agua ejercicio","Fumar","Sedentarismo"],c:0}
+
 ];
 
-/* ==================== LÓGICA ==================== */
 let juego=[], i=0, ok=0;
 let tiempo = TIEMPO_TOTAL;
 let intervalo;
