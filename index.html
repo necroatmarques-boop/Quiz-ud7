@@ -9,37 +9,42 @@
 body { font-family: Arial, sans-serif; background:#f2f2f2; padding:15px; }
 h1 { text-align:center; }
 
-#topbar {
+#topbar{
   display:flex;
   align-items:center;
   gap:10px;
   margin-bottom:15px;
 }
 
-#progress {
+#progress{
   display:grid;
-  grid-template-columns:repeat(20, 1fr);
+  grid-template-columns:repeat(20,1fr);
   gap:4px;
   flex:1;
 }
 
-.square {
+.square{
   height:12px;
   border-radius:3px;
   background:#ccc;
 }
-.square.ok { background:#28a745; }
-.square.ko { background:#dc3545; }
+.square.ok{background:#28a745;}
+.square.ko{background:#dc3545;}
 
-#timer {
+#timer{
   font-weight:bold;
   min-width:60px;
   text-align:right;
 }
 
-.card { background:#fff; padding:15px; border-radius:10px; margin-bottom:15px; }
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+}
 
-button {
+button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -48,12 +53,16 @@ button {
   border-radius:8px;
   background:#007aff;
   color:white;
+  cursor:pointer;
 }
 
-button.correct { background:#28a745 !important; }
-button.incorrect { background:#dc3545 !important; }
+button.correct{background:#28a745 !important;}
+button.incorrect{background:#dc3545 !important;}
 
-.result { text-align:center; font-size:22px; }
+.result{
+  text-align:center;
+  font-size:22px;
+}
 </style>
 </head>
 
@@ -69,12 +78,13 @@ button.incorrect { background:#dc3545 !important; }
 <div id="app"></div>
 
 <script>
+
 const POR_PARTIDA = 20;
 const TIEMPO_TOTAL = 20 * 60;
 
 const preguntas = [
 
-   {q:"¿Qué patología presenta episodios de ingesta excesiva y provocación de vómitos?", a:"Bulimia nerviosa", i:["Anorexia nerviosa", "Vigorexia"]},
+  {q:"¿Qué patología presenta episodios de ingesta excesiva y provocación de vómitos?", a:"Bulimia nerviosa", i:["Anorexia nerviosa", "Vigorexia"]},
     {q:"¿Qué es la esofagitis?", a:"Inflamación del esófago por reflujo gástrico", i:["Infección por virus en la boca", "Cáncer de laringe"]},
     {q:"¿Qué caracteriza a la enfermedad de Crohn?", a:"Lesiones discontinuas con inflamación de la pared del intestino", i:["Lesiones continuas solo en el recto", "Cálculos en el hígado"]},
     {q:"¿Qué es la litiasis biliar?", a:"Formación de cálculos en la vesícula biliar", i:["Piedras en el riñón", "Infección de orina"]},
@@ -224,109 +234,131 @@ const preguntas = [
     {q:"¿Pregunta final: Has estudiado?", a:"Sí, soy un crack", i:["No, soy un inútil", "Mañana lo hago"]}
 ];
 
-
-let juego=[], i=0, ok=0;
+let juego = [];
+let i = 0;
+let ok = 0;
 let tiempo = TIEMPO_TOTAL;
 let intervalo;
 
 function iniciar(){
-  i=0; ok=0; tiempo=TIEMPO_TOTAL;
-  juego = preguntas.sort(()=>Math.random()-0.5).slice(0,POR_PARTIDA);
 
-  document.getElementById("progress").innerHTML =
-    Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
+i=0;
+ok=0;
+tiempo=TIEMPO_TOTAL;
 
-  clearInterval(intervalo);
-  intervalo = setInterval(tick,1000);
+juego = preguntas.sort(()=>Math.random()-0.5).slice(0,POR_PARTIDA);
 
-  mostrar();
+document.getElementById("progress").innerHTML =
+Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
+
+clearInterval(intervalo);
+intervalo = setInterval(tick,1000);
+
+mostrar();
 }
 
 function tick(){
-  tiempo--;
-  const m = String(Math.floor(tiempo/60)).padStart(2,'0');
-  const s = String(tiempo%60).padStart(2,'0');
-  document.getElementById("timer").textContent = `${m}:${s}`;
-  if(tiempo<=0) mostrarResultado();
+
+tiempo--;
+
+const m = String(Math.floor(tiempo/60)).padStart(2,'0');
+const s = String(tiempo%60).padStart(2,'0');
+
+document.getElementById("timer").textContent = `${m}:${s}`;
+
+if(tiempo<=0){
+mostrarResultado();
 }
 
-function mostrar() {
-  const app = document.getElementById("app");
-  if (i >= juego.length) { mostrarResultado(); return; }
-  
-  const p = juego[i];
-  // Mezcla la respuesta correcta (a) con las incorrectas (i)
-  const opciones = [p.a, ...p.i].sort(() => Math.random() - 0.5);
-  
-  let h = `<div class="card"><h3>${i + 1}. ${p.q}</h3>`;
-  opciones.forEach(op => {
-    h += `<button onclick="responder(this, '${p.a.replace(/'/g, "\\'")}')">${op}</button>`;
-  });
-  app.innerHTML = h + "</div>";
 }
 
-function responder(btnElegido, respuestaCorrecta) {
-  const botones = document.querySelectorAll("button");
-  botones.forEach(b => b.disabled = true);
+function mostrar(){
 
-  const sq = document.querySelectorAll(".square")[i];
-  const esCorrecto = btnElegido.innerText === respuestaCorrecta;
+const app = document.getElementById("app");
 
-  if (esCorrecto) {
-    btnElegido.classList.add("correct");
-    sq.classList.add("ok");
-    ok++;
-
-    setTimeout(() => {
-      i++;
-      mostrar();
-    }, 1200);
-
-  } else {
-    btnElegido.classList.add("incorrect");
-    btnElegido.innerText = "¡INÚTIL! ❌";
-    sq.classList.add("ko");
-
-    botones.forEach(b => {
-      if (b.innerText === respuestaCorrecta) {
-        b.classList.add("correct");
-      }
-    });
-
-    setTimeout(() => {
-      i++;
-      mostrar();
-    }, 3000);
-  }
+if(i>=juego.length){
+mostrarResultado();
+return;
 }
 
-    // Castigo de 3 segundos
-    setTimeout(() => { i++; mostrar(); }, 3000);
-    }
+const p = juego[i];
 
-    // Castigo de 3 segundos antes de seguir
-    setTimeout(() => { i++; mostrar(); }, 3000);
-  }
+const opciones = [p.a,...p.i].sort(()=>Math.random()-0.5);
+
+let html = `<div class="card"><h3>${i+1}. ${p.q}</h3>`;
+
+opciones.forEach(op=>{
+
+html += `<button onclick="responder(this,'${p.a.replace(/'/g,"\\'")}')">${op}</button>`;
+
+});
+
+html += `</div>`;
+
+app.innerHTML = html;
+
 }
-  }
 
-  setTimeout(()=>{ i++; mostrar(); },1000);
+function responder(btn,respuesta){
+
+const botones = document.querySelectorAll("button");
+
+botones.forEach(b=>b.disabled=true);
+
+const sq = document.querySelectorAll(".square")[i];
+
+if(btn.innerText===respuesta){
+
+btn.classList.add("correct");
+sq.classList.add("ok");
+ok++;
+
+setTimeout(()=>{
+i++;
+mostrar();
+},1200);
+
+}else{
+
+btn.classList.add("incorrect");
+btn.innerText="¡INÚTIL! ❌";
+sq.classList.add("ko");
+
+botones.forEach(b=>{
+if(b.innerText===respuesta){
+b.classList.add("correct");
+}
+});
+
+setTimeout(()=>{
+i++;
+mostrar();
+},3000);
+
 }
 
-function mostrarResultado() {
-  clearInterval(intervalo);
-  const porcentaje = (ok / POR_PARTIDA) * 100;
-  let mensaje = porcentaje >= 70 ? "¡ESTÁS LISTO!" : "¡ESTUDIA MÁS, INÚTIL!";
-  
-  document.getElementById("app").innerHTML = `
-    <div class="card result">
-      <h2>${mensaje}</h2>
-      <p style="font-size:40px; font-weight:bold;">${ok} / ${POR_PARTIDA}</p>
-      <button onclick="location.reload()">Nueva partida (20 distintas)</button>
-    </div>`;
+}
+
+function mostrarResultado(){
+
+clearInterval(intervalo);
+
+const porcentaje = (ok/POR_PARTIDA)*100;
+
+let mensaje = porcentaje>=70 ? "¡ESTÁS LISTO!" : "¡ESTUDIA MÁS, INÚTIL!";
+
+document.getElementById("app").innerHTML = `
+<div class="card result">
+<h2>${mensaje}</h2>
+<p style="font-size:40px;font-weight:bold;">${ok} / ${POR_PARTIDA}</p>
+<button onclick="location.reload()">Nueva partida</button>
+</div>
+`;
+
 }
 
 iniciar();
+
 </script>
 
 </body>
