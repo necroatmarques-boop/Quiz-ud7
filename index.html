@@ -225,10 +225,6 @@ const preguntas = [
 ];
 
 
-
-
-];
-
 let juego=[], i=0, ok=0;
 let tiempo = TIEMPO_TOTAL;
 let intervalo;
@@ -280,16 +276,29 @@ function responder(btnElegido, respuestaCorrecta) {
     btnElegido.classList.add("correct");
     sq.classList.add("ok");
     ok++;
-    setTimeout(() => { i++; mostrar(); }, 1200);
+
+    setTimeout(() => {
+      i++;
+      mostrar();
+    }, 1200);
+
   } else {
     btnElegido.classList.add("incorrect");
-    btnElegido.innerText = "¡INÚTIL! ❌"; // El mensaje que pediste
+    btnElegido.innerText = "¡INÚTIL! ❌";
     sq.classList.add("ko");
 
-    // Marca la correcta en verde para que la veas
     botones.forEach(b => {
-      if (b.innerText === respuestaCorrecta) b.classList.add("correct");
+      if (b.innerText === respuestaCorrecta) {
+        b.classList.add("correct");
+      }
     });
+
+    setTimeout(() => {
+      i++;
+      mostrar();
+    }, 3000);
+  }
+}
 
     // Castigo de 3 segundos
     setTimeout(() => { i++; mostrar(); }, 3000);
