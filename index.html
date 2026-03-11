@@ -254,18 +254,24 @@ function tick(){
   if(tiempo<=0) mostrarResultado();
 }
 
-function mostrar(){
-  const app=document.getElementById("app");
-  if(i>=juego.length){ mostrarResultado(); return; }
-  const p=juego[i];
-  let h=`<div class="card"><h3>${i+1}. ${p.q}</h3>`;
-  p.o.forEach((op,j)=>h+=`<button onclick="responder(${j})">${op}</button>`);
-  app.innerHTML=h+"</div>";
+function mostrar() {
+  const app = document.getElementById("app");
+  if (i >= juego.length) { mostrarResultado(); return; }
+  
+  const p = juego[i];
+  // Mezcla la respuesta correcta (a) con las incorrectas (i)
+  const opciones = [p.a, ...p.i].sort(() => Math.random() - 0.5);
+  
+  let h = `<div class="card"><h3>${i + 1}. ${p.q}</h3>`;
+  opciones.forEach(op => {
+    h += `<button onclick="responder(this, '${p.a.replace(/'/g, "\\'")}')">${op}</button>`;
+  });
+  app.innerHTML = h + "</div>";
 }
 
 function responder(btnElegido, respuestaCorrecta) {
   const botones = document.querySelectorAll("button");
-  botones.forEach(b => b.disabled = true); // Bloqueo total
+  botones.forEach(b => b.disabled = true);
 
   const sq = document.querySelectorAll(".square")[i];
   const esCorrecto = btnElegido.innerText === respuestaCorrecta;
@@ -274,17 +280,20 @@ function responder(btnElegido, respuestaCorrecta) {
     btnElegido.classList.add("correct");
     sq.classList.add("ok");
     ok++;
-    // Si acierta, pasa rápido (1.2 segundos)
     setTimeout(() => { i++; mostrar(); }, 1200);
   } else {
     btnElegido.classList.add("incorrect");
     btnElegido.innerText = "¡INÚTIL! ❌"; // El mensaje que pediste
     sq.classList.add("ko");
 
-    // Buscamos cuál era la correcta para marcarla en verde
+    // Marca la correcta en verde para que la veas
     botones.forEach(b => {
       if (b.innerText === respuestaCorrecta) b.classList.add("correct");
     });
+
+    // Castigo de 3 segundos
+    setTimeout(() => { i++; mostrar(); }, 3000);
+    }
 
     // Castigo de 3 segundos antes de seguir
     setTimeout(() => { i++; mostrar(); }, 3000);
@@ -295,13 +304,16 @@ function responder(btnElegido, respuestaCorrecta) {
   setTimeout(()=>{ i++; mostrar(); },1000);
 }
 
-function mostrarResultado(){
+function mostrarResultado() {
   clearInterval(intervalo);
-  document.getElementById("app").innerHTML=
-    `<div class="card result">
-      <h2>Resultado</h2>
-      <p>${ok} / ${POR_PARTIDA}</p>
-      <button onclick="iniciar()">Nueva partida</button>
+  const porcentaje = (ok / POR_PARTIDA) * 100;
+  let mensaje = porcentaje >= 70 ? "¡ESTÁS LISTO!" : "¡ESTUDIA MÁS, INÚTIL!";
+  
+  document.getElementById("app").innerHTML = `
+    <div class="card result">
+      <h2>${mensaje}</h2>
+      <p style="font-size:40px; font-weight:bold;">${ok} / ${POR_PARTIDA}</p>
+      <button onclick="location.reload()">Nueva partida (20 distintas)</button>
     </div>`;
 }
 
