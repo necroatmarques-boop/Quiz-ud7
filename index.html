@@ -263,21 +263,33 @@ function mostrar(){
   app.innerHTML=h+"</div>";
 }
 
-function responder(r){
-  const botones=document.querySelectorAll("button");
-  botones.forEach(b=>b.disabled=true);
+function responder(btnElegido, respuestaCorrecta) {
+  const botones = document.querySelectorAll("button");
+  botones.forEach(b => b.disabled = true); // Bloqueo total
 
-  const correcta=juego[i].c;
-  const sq=document.querySelectorAll(".square")[i];
+  const sq = document.querySelectorAll(".square")[i];
+  const esCorrecto = btnElegido.innerText === respuestaCorrecta;
 
-  if(r===correcta){
-    botones[r].classList.add("correct");
+  if (esCorrecto) {
+    btnElegido.classList.add("correct");
     sq.classList.add("ok");
     ok++;
+    // Si acierta, pasa rápido (1.2 segundos)
+    setTimeout(() => { i++; mostrar(); }, 1200);
   } else {
-    botones[r].classList.add("incorrect");
-    botones[correcta].classList.add("correct");
+    btnElegido.classList.add("incorrect");
+    btnElegido.innerText = "¡INÚTIL! ❌"; // El mensaje que pediste
     sq.classList.add("ko");
+
+    // Buscamos cuál era la correcta para marcarla en verde
+    botones.forEach(b => {
+      if (b.innerText === respuestaCorrecta) b.classList.add("correct");
+    });
+
+    // Castigo de 3 segundos antes de seguir
+    setTimeout(() => { i++; mostrar(); }, 3000);
+  }
+}
   }
 
   setTimeout(()=>{ i++; mostrar(); },1000);
