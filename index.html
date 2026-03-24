@@ -40,7 +40,6 @@ button.incorrect{background:#dc3545 !important;}
 
 <h1>🧠 Quiz Sistema Urinario y Genital</h1>
 
-<!-- 🔥 BARRA GLOBAL -->
 <div style="margin-bottom:10px;">
   <div style="height:10px;background:#ddd;border-radius:5px;overflow:hidden;">
     <div id="barraGlobal" style="height:100%;width:0%;background:#007aff;"></div>
@@ -48,12 +47,12 @@ button.incorrect{background:#dc3545 !important;}
 </div>
 
 <div id="topbar">
-<div id="progress"></div>
+  <div id="progress"></div>
 
-<div style="display:flex;flex-direction:column;align-items:flex-end;">
-  <div id="contador">0 / 0</div>
-  <div id="timer">20:00</div>
-</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;">
+    <div id="contador">0 / 0</div>
+    <div id="timer">20:00</div>
+  </div>
 </div>
 
 <div id="racha" class="racha"></div>
@@ -61,20 +60,21 @@ button.incorrect{background:#dc3545 !important;}
 
 <script>
 
+const app = document.getElementById("app");
+
 const POR_PARTIDA = 20;
 const TIEMPO_TOTAL = 1200;
 
 let juego=[],i=0,ok=0,tiempo=TIEMPO_TOTAL,intervalo,racha=0;
 
-// 🔥 SISTEMA PRO
 let respondidas = 0;
 let pool = [];
 let indiceGlobal = 0;
 let jugador = localStorage.getItem("jugador") || "";
 
-// 🧠 PREGUNTAS
-const preguntas = [
-{q:"¿Cuál es la función principal del aparato urinario?", a:"Eliminar sustancias de desecho mediante la orina", i:["Transportar oxígeno en la sangre", "Regular la digestión de nutrientes"]},
+// 👉 PEGA AQUÍ TUS PREGUNTAS
+const preguntas = [];
+  {q:"¿Cuál es la función principal del aparato urinario?", a:"Eliminar sustancias de desecho mediante la orina", i:["Transportar oxígeno en la sangre", "Regular la digestión de nutrientes"]},
 {q:"¿Qué órganos forman el aparato urinario?", a:"Riñones, uréteres, vejiga urinaria y uretra", i:["Riñones, hígado y vejiga", "Pulmones, riñones y uretra"]},
 {q:"¿Qué forma tienen los riñones?", a:"Forma de judía", i:["Forma esférica", "Forma triangular"]},
 {q:"¿Dónde se localizan los riñones?", a:"En la cavidad abdominal, en la fosa lumbar", i:["En la cavidad torácica", "En la cavidad craneal"]},
@@ -381,120 +381,115 @@ const preguntas = [
 {q:"¿Qué puede indicar síntomas iniciales del cáncer de próstata?", a:"Metástasis", i:["Hipoglucemia", "Hipertensión"]},
 {q:"¿Qué prueba es útil para el diagnóstico del cáncer de próstata?", a:"PSA", i:["Electrocardiograma", "Radiografía de tórax"]},
 
-/* 👉 PEGA AQUÍ TUS 280 PREGUNTAS */
+  
 
-];
-
-// 🔥 CONTADOR + BARRA
 function actualizarContador(){
-document.getElementById("contador").textContent =
-respondidas + " / " + preguntas.length;
+  document.getElementById("contador").textContent =
+  respondidas + " / " + preguntas.length;
 
-let porcentaje = (respondidas / preguntas.length) * 100;
-document.getElementById("barraGlobal").style.width = porcentaje + "%";
+  let porcentaje = (respondidas / preguntas.length) * 100;
+  document.getElementById("barraGlobal").style.width = porcentaje + "%";
 }
 
-// 🚀 INICIO
 function iniciar(){
 
-if(!jugador){
-  jugador = prompt("Pon tu nombre:");
-  localStorage.setItem("jugador", jugador);
+  if(preguntas.length === 0){
+    app.innerHTML = "<div class='card'>⚠️ No hay preguntas</div>";
+    return;
+  }
+
+  if(!jugador){
+    jugador = prompt("Pon tu nombre:");
+    localStorage.setItem("jugador", jugador);
+  }
+
+  if(pool.length === 0){
+    pool = [...preguntas].sort(()=>Math.random()-0.5);
+  }
+
+  i=0;
+  ok=0;
+  racha=0;
+  tiempo=TIEMPO_TOTAL;
+
+  juego = pool.slice(indiceGlobal, indiceGlobal + POR_PARTIDA);
+
+  if(juego.length === 0){
+    pool = [...preguntas].sort(()=>Math.random()-0.5);
+    indiceGlobal = 0;
+    respondidas = 0;
+    juego = pool.slice(0, POR_PARTIDA);
+  }
+
+  indiceGlobal += POR_PARTIDA;
+
+  document.getElementById("progress").innerHTML =
+  Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
+
+  actualizarContador();
+
+  clearInterval(intervalo);
+  intervalo=setInterval(()=>{
+    tiempo--;
+    document.getElementById("timer").textContent =
+    Math.floor(tiempo/60)+":"+String(tiempo%60).padStart(2,'0');
+    if(tiempo<=0)resultado();
+  },1000);
+
+  mostrar();
 }
 
-// crear pool solo 1 vez
-if(pool.length === 0){
-  pool = [...preguntas].sort(()=>Math.random()-0.5);
-}
-
-i=0;
-ok=0;
-racha=0;
-tiempo=TIEMPO_TOTAL;
-
-// coger bloque sin repetir
-juego = pool.slice(indiceGlobal, indiceGlobal + POR_PARTIDA);
-
-// si termina todo → reinicia
-if(juego.length === 0){
-  pool = [...preguntas].sort(()=>Math.random()-0.5);
-  indiceGlobal = 0;
-  respondidas = 0;
-  juego = pool.slice(0, POR_PARTIDA);
-}
-
-// avanzar bloque
-indiceGlobal += POR_PARTIDA;
-
-document.getElementById("progress").innerHTML =
-Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
-
-actualizarContador();
-
-clearInterval(intervalo);
-intervalo=setInterval(()=>{
-tiempo--;
-document.getElementById("timer").textContent =
-Math.floor(tiempo/60)+":"+String(tiempo%60).padStart(2,'0');
-if(tiempo<=0)resultado();
-},1000);
-
-mostrar();
-}
-
-// MOSTRAR
 function mostrar(){
 
-if(i>=juego.length){resultado();return;}
+  if(i>=juego.length){resultado();return;}
 
-let p=juego[i];
+  let p=juego[i];
 
-if(p.tipo==="drag"){mostrarDrag(p);return;}
+  if(p.tipo==="drag"){mostrarDrag(p);return;}
 
-let ops=[p.a,...p.i].sort(()=>Math.random()-0.5);
+  let ops=[p.a,...p.i].sort(()=>Math.random()-0.5);
 
-app.innerHTML=`<div class="card"><h3>${i+1}. ${p.q}</h3>`+
-ops.map(o=>`<button onclick="responder(this,'${p.a}')">${o}</button>`).join("")+
-`</div>`;
+  app.innerHTML=`<div class="card">
+  <h3>${i+1}. ${p.q}</h3>
+  ${ops.map(o=>`<button onclick="responder(this,'${p.a}')">${o}</button>`).join("")}
+  </div>`;
 }
 
-// RESPUESTA NORMAL
 function responder(btn,resp){
 
-let botones=document.querySelectorAll("button");
-botones.forEach(b=>b.disabled=true);
+  let botones=document.querySelectorAll("button");
+  botones.forEach(b=>b.disabled=true);
 
-let sq=document.querySelectorAll(".square")[i];
+  let sq=document.querySelectorAll(".square")[i];
 
-if(btn.innerText===resp){
-  btn.classList.add("correct");
-  sq.classList.add("ok");
-  ok++;racha++;
-}else{
-  btn.classList.add("incorrect");
-  btn.innerText="INÚTIL ❌";
-  sq.classList.add("ko");
-  racha=0;
+  if(btn.innerText===resp){
+    btn.classList.add("correct");
+    sq.classList.add("ok");
+    ok++;
+    racha++;
+  }else{
+    btn.classList.add("incorrect");
+    btn.innerText="INÚTIL ❌";
+    sq.classList.add("ko");
+    racha=0;
 
-  // 🔥 MARCAR LA CORRECTA
-  botones.forEach(b=>{
-    if(b.innerText===resp){
-      b.classList.add("correct");
-    }
-  });
-}
+    botones.forEach(b=>{
+      if(b.innerText===resp){
+        b.classList.add("correct");
+      }
+    });
+  }
 
-document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
+  respondidas++;
+  actualizarContador();
 
-setTimeout(()=>{i++;mostrar();},1200);
-}
+  document.getElementById("racha").innerHTML =
+  racha>=3?`🔥 ${racha}`:"";
 
-respondidas++;
-actualizarContador();
-
-document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
-
-setTimeout(()=>{i++;mostrar();},1200);
+  setTimeout(()=>{
+    i++;
+    mostrar();
+  },1200);
 }
 
 // DRAG
@@ -502,71 +497,78 @@ let dragged;
 
 function mostrarDrag(p){
 
-app.innerHTML=`<div class="card"><h3>${p.q}</h3>
-<img src="${p.img}" style="width:100%">
-${p.zonas.map(z=>`<div class="drop" data-correct="${z}"></div>`).join("")}
-${p.opciones.map(o=>`<div class="drag" draggable="true" data-name="${o}">${o}</div>`).join("")}
-<button onclick="checkDrag()">Comprobar</button></div>`;
+  app.innerHTML=`<div class="card">
+  <h3>${p.q}</h3>
+  <img src="${p.img}" style="width:100%">
+  ${p.zonas.map(z=>`<div class="drop" data-correct="${z}"></div>`).join("")}
+  ${p.opciones.map(o=>`<div class="drag" draggable="true" data-name="${o}">${o}</div>`).join("")}
+  <button onclick="checkDrag()">Comprobar</button>
+  </div>`;
 
-document.querySelectorAll(".drag").forEach(d=>{
-d.ondragstart=()=>dragged=d;
-});
+  document.querySelectorAll(".drag").forEach(d=>{
+    d.ondragstart=()=>dragged=d;
+  });
 
-document.querySelectorAll(".drop").forEach(z=>{
-z.ondragover=e=>e.preventDefault();
-z.ondrop=e=>{
-if(!z.firstChild)z.appendChild(dragged);
-};
-});
+  document.querySelectorAll(".drop").forEach(z=>{
+    z.ondragover=e=>e.preventDefault();
+    z.ondrop=e=>{
+      if(!z.firstChild)z.appendChild(dragged);
+    };
+  });
 }
 
 function checkDrag(){
 
-let correct=0;
-document.querySelectorAll(".drop").forEach(z=>{
-if(z.firstChild && z.firstChild.dataset.name===z.dataset.correct)correct++;
-});
+  let correct=0;
+  document.querySelectorAll(".drop").forEach(z=>{
+    if(z.firstChild && z.firstChild.dataset.name===z.dataset.correct)correct++;
+  });
 
-let sq=document.querySelectorAll(".square")[i];
+  let sq=document.querySelectorAll(".square")[i];
 
-if(correct===document.querySelectorAll(".drop").length){
-sq.classList.add("ok");ok++;racha++;
-}else{
-sq.classList.add("ko");racha=0;
+  if(correct===document.querySelectorAll(".drop").length){
+    sq.classList.add("ok");
+    ok++;
+    racha++;
+  }else{
+    sq.classList.add("ko");
+    racha=0;
+  }
+
+  respondidas++;
+  actualizarContador();
+
+  setTimeout(()=>{
+    i++;
+    mostrar();
+  },1200);
 }
 
-respondidas++;
-actualizarContador();
-
-setTimeout(()=>{i++;mostrar();},1200);
-}
-
-// RESULTADO + RANKING
 function resultado(){
 
-clearInterval(intervalo);
+  clearInterval(intervalo);
 
-let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
+  let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
 
-ranking.push({
-  nombre: jugador,
-  aciertos: ok
-});
+  ranking.push({
+    nombre: jugador,
+    aciertos: ok
+  });
 
-ranking.sort((a,b)=>b.aciertos - a.aciertos);
-ranking = ranking.slice(0,10);
+  ranking.sort((a,b)=>b.aciertos - a.aciertos);
+  ranking = ranking.slice(0,10);
 
-localStorage.setItem("ranking", JSON.stringify(ranking));
+  localStorage.setItem("ranking", JSON.stringify(ranking));
 
-app.innerHTML=`<div class="card">
-<h2>${ok>=14?"🔥 CRACK":"ESTUDIA MÁS INÚTIL"}</h2>
-<p>${ok}/20</p>
+  app.innerHTML=`<div class="card">
+  <h2>${ok>=14?"🔥 CRACK":"ESTUDIA MÁS INÚTIL"}</h2>
+  <p>${ok}/20</p>
 
-<h3>🏆 Ranking</h3>
-${ranking.map(r=>`<div>${r.nombre} - ${r.aciertos}</div>`).join("")}
+  <h3>🏆 Ranking</h3>
+  ${ranking.map(r=>`<div>${r.nombre} - ${r.aciertos}</div>`).join("")}
 
-<button onclick="iniciar()">Siguiente bloque</button>
-</div>`;
+  <button onclick="iniciar()">Siguiente bloque</button>
+  </div>`;
 }
 
 iniciar();
