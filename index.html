@@ -73,7 +73,7 @@ let indiceGlobal = 0;
 let jugador = localStorage.getItem("jugador") || "";
 
 // 👉 PEGA AQUÍ TUS PREGUNTAS
-const preguntas = [];
+const preguntas = [
   {q:"¿Cuál es la función principal del aparato urinario?", a:"Eliminar sustancias de desecho mediante la orina", i:["Transportar oxígeno en la sangre", "Regular la digestión de nutrientes"]},
 {q:"¿Qué órganos forman el aparato urinario?", a:"Riñones, uréteres, vejiga urinaria y uretra", i:["Riñones, hígado y vejiga", "Pulmones, riñones y uretra"]},
 {q:"¿Qué forma tienen los riñones?", a:"Forma de judía", i:["Forma esférica", "Forma triangular"]},
@@ -381,7 +381,7 @@ const preguntas = [];
 {q:"¿Qué puede indicar síntomas iniciales del cáncer de próstata?", a:"Metástasis", i:["Hipoglucemia", "Hipertensión"]},
 {q:"¿Qué prueba es útil para el diagnóstico del cáncer de próstata?", a:"PSA", i:["Electrocardiograma", "Radiografía de tórax"]},
 
-  
+  ];
 
 function actualizarContador(){
   document.getElementById("contador").textContent =
