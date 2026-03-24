@@ -40,15 +40,20 @@ button.incorrect{background:#dc3545 !important;}
 
 <h1>🧠 Quiz Sistema Urinario y Genital</h1>
 
+<!-- 🔥 BARRA GLOBAL -->
+<div style="margin-bottom:10px;">
+  <div style="height:10px;background:#ddd;border-radius:5px;overflow:hidden;">
+    <div id="barraGlobal" style="height:100%;width:0%;background:#007aff;"></div>
+  </div>
+</div>
+
 <div id="topbar">
 <div id="progress"></div>
 
-<!-- 🔥 NUEVO BLOQUE DERECHA -->
 <div style="display:flex;flex-direction:column;align-items:flex-end;">
   <div id="contador">0 / 0</div>
   <div id="timer">20:00</div>
 </div>
-
 </div>
 
 <div id="racha" class="racha"></div>
@@ -61,9 +66,11 @@ const TIEMPO_TOTAL = 1200;
 
 let juego=[],i=0,ok=0,tiempo=TIEMPO_TOTAL,intervalo,racha=0;
 
-// 🔥 NUEVO SISTEMA
-let preguntasVistas = new Set();
-let totalPreguntas = 0;
+// 🔥 SISTEMA PRO
+let respondidas = 0;
+let pool = [];
+let indiceGlobal = 0;
+let jugador = localStorage.getItem("jugador") || "";
 
 // 🧠 PREGUNTAS
 const preguntas = [
@@ -374,35 +381,55 @@ const preguntas = [
 {q:"¿Qué puede indicar síntomas iniciales del cáncer de próstata?", a:"Metástasis", i:["Hipoglucemia", "Hipertensión"]},
 {q:"¿Qué prueba es útil para el diagnóstico del cáncer de próstata?", a:"PSA", i:["Electrocardiograma", "Radiografía de tórax"]},
 
-  
-// 🖼️ DRAG FEMENINO
-{
-tipo:"drag",
-q:"Coloca las partes del aparato genital femenino",
-img:"femenino.jpg",
-zonas:["utero","ovario","trompa","vagina","cervix"],
-opciones:["utero","ovario","trompa","vagina","cervix"]
-},
+/* 👉 PEGA AQUÍ TUS 280 PREGUNTAS */
 
-// 🖼️ DRAG MASCULINO
-{
-tipo:"drag",
-q:"Coloca las partes del aparato genital masculino",
-img:"masculino.jpg",
-zonas:["testiculo","epididimo","prostata","uretra","pene"],
-opciones:["testiculo","epididimo","prostata","uretra","pene"]
-},
-
-// 🔥 añade aquí tus 280 preguntas si quieres
 ];
 
-function iniciar(){
-i=0;ok=0;racha=0;tiempo=TIEMPO_TOTAL;
+// 🔥 CONTADOR + BARRA
+function actualizarContador(){
+document.getElementById("contador").textContent =
+respondidas + " / " + preguntas.length;
 
-juego = preguntas.sort(()=>Math.random()-0.5).slice(0,POR_PARTIDA);
+let porcentaje = (respondidas / preguntas.length) * 100;
+document.getElementById("barraGlobal").style.width = porcentaje + "%";
+}
+
+// 🚀 INICIO
+function iniciar(){
+
+if(!jugador){
+  jugador = prompt("Pon tu nombre:");
+  localStorage.setItem("jugador", jugador);
+}
+
+// crear pool solo 1 vez
+if(pool.length === 0){
+  pool = [...preguntas].sort(()=>Math.random()-0.5);
+}
+
+i=0;
+ok=0;
+racha=0;
+tiempo=TIEMPO_TOTAL;
+
+// coger bloque sin repetir
+juego = pool.slice(indiceGlobal, indiceGlobal + POR_PARTIDA);
+
+// si termina todo → reinicia
+if(juego.length === 0){
+  pool = [...preguntas].sort(()=>Math.random()-0.5);
+  indiceGlobal = 0;
+  respondidas = 0;
+  juego = pool.slice(0, POR_PARTIDA);
+}
+
+// avanzar bloque
+indiceGlobal += POR_PARTIDA;
 
 document.getElementById("progress").innerHTML =
 Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
+
+actualizarContador();
 
 clearInterval(intervalo);
 intervalo=setInterval(()=>{
@@ -415,6 +442,7 @@ if(tiempo<=0)resultado();
 mostrar();
 }
 
+// MOSTRAR
 function mostrar(){
 
 if(i>=juego.length){resultado();return;}
@@ -430,6 +458,7 @@ ops.map(o=>`<button onclick="responder(this,'${p.a}')">${o}</button>`).join("")+
 `</div>`;
 }
 
+// RESPUESTA NORMAL
 function responder(btn,resp){
 
 let botones=document.querySelectorAll("button");
@@ -447,6 +476,9 @@ btn.innerText="INÚTIL ❌";
 sq.classList.add("ko");
 racha=0;
 }
+
+respondidas++;
+actualizarContador();
 
 document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
 
@@ -491,17 +523,37 @@ sq.classList.add("ok");ok++;racha++;
 sq.classList.add("ko");racha=0;
 }
 
+respondidas++;
+actualizarContador();
+
 setTimeout(()=>{i++;mostrar();},1200);
 }
 
+// RESULTADO + RANKING
 function resultado(){
 
 clearInterval(intervalo);
 
+let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
+
+ranking.push({
+  nombre: jugador,
+  aciertos: ok
+});
+
+ranking.sort((a,b)=>b.aciertos - a.aciertos);
+ranking = ranking.slice(0,10);
+
+localStorage.setItem("ranking", JSON.stringify(ranking));
+
 app.innerHTML=`<div class="card">
 <h2>${ok>=14?"🔥 CRACK":"ESTUDIA MÁS INÚTIL"}</h2>
 <p>${ok}/20</p>
-<button onclick="location.reload()">Reiniciar</button>
+
+<h3>🏆 Ranking</h3>
+${ranking.map(r=>`<div>${r.nombre} - ${r.aciertos}</div>`).join("")}
+
+<button onclick="iniciar()">Siguiente bloque</button>
 </div>`;
 }
 
