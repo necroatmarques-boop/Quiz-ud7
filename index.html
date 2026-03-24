@@ -467,14 +467,25 @@ botones.forEach(b=>b.disabled=true);
 let sq=document.querySelectorAll(".square")[i];
 
 if(btn.innerText===resp){
-btn.classList.add("correct");
-sq.classList.add("ok");
-ok++;racha++;
+  btn.classList.add("correct");
+  sq.classList.add("ok");
+  ok++;racha++;
 }else{
-btn.classList.add("incorrect");
-btn.innerText="INÚTIL ❌";
-sq.classList.add("ko");
-racha=0;
+  btn.classList.add("incorrect");
+  btn.innerText="INÚTIL ❌";
+  sq.classList.add("ko");
+  racha=0;
+
+  // 🔥 MARCAR LA CORRECTA
+  botones.forEach(b=>{
+    if(b.innerText===resp){
+      b.classList.add("correct");
+    }
+
+document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
+
+setTimeout(()=>{i++;mostrar();},1200);
+}
 }
 
 respondidas++;
