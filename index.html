@@ -481,11 +481,12 @@ if(btn.innerText===resp){
     if(b.innerText===resp){
       b.classList.add("correct");
     }
+  });
+}
 
 document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
 
 setTimeout(()=>{i++;mostrar();},1200);
-}
 }
 
 respondidas++;
