@@ -3,248 +3,388 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz UD6 Aparato Digestivo</title>
+<title>Quiz UD7 Sistema Urinario y Genital</title>
 
 <style>
-body { font-family: Arial, sans-serif; background:#f2f2f2; padding:15px; }
+body { font-family: Arial; background:#f2f2f2; padding:15px; }
 h1 { text-align:center; }
 
-#topbar{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:15px;
-}
-
-#progress{
-  display:grid;
-  grid-template-columns:repeat(20,1fr);
-  gap:4px;
-  flex:1;
-}
-
-.square{
-  height:12px;
-  border-radius:3px;
-  background:#ccc;
-}
+#topbar{display:flex;gap:10px;margin-bottom:15px;}
+#progress{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;flex:1;}
+.square{height:12px;border-radius:3px;background:#ccc;}
 .square.ok{background:#28a745;}
 .square.ko{background:#dc3545;}
 
-#timer{
-  font-weight:bold;
-  min-width:60px;
-  text-align:right;
-}
+#timer{font-weight:bold;}
 
-.card{
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-}
+.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;}
 
 button{
-  width:100%;
-  padding:12px;
-  margin-top:8px;
-  font-size:16px;
-  border:none;
-  border-radius:8px;
-  background:#007aff;
-  color:white;
-  cursor:pointer;
+width:100%;padding:12px;margin-top:8px;
+font-size:16px;border:none;border-radius:8px;
+background:#007aff;color:white;cursor:pointer;
 }
 
 button.correct{background:#28a745 !important;}
 button.incorrect{background:#dc3545 !important;}
 
-.result{
-  text-align:center;
-  font-size:22px;
-}
+.drag{background:#007aff;color:white;padding:8px;margin:5px;border-radius:5px;display:inline-block;cursor:grab;}
+.drop{border:2px dashed #999;padding:10px;margin:5px;min-height:40px;border-radius:5px;}
+
+.racha{text-align:center;font-size:20px;margin-bottom:10px;}
 </style>
 </head>
 
 <body>
 
-<h1>🍽️ Quiz Aparato Digestivo</h1>
+<h1>🧠 Quiz Sistema Urinario y Genital</h1>
 
 <div id="topbar">
-  <div id="progress"></div>
-  <div id="timer">20:00</div>
+<div id="progress"></div>
+<div id="timer">20:00</div>
 </div>
 
+<div id="racha" class="racha"></div>
 <div id="app"></div>
 
 <script>
 
 const POR_PARTIDA = 20;
-const TIEMPO_TOTAL = 20 * 60;
+const TIEMPO_TOTAL = 1200;
 
+let juego=[],i=0,ok=0,tiempo=TIEMPO_TOTAL,intervalo,racha=0;
+
+// 🧠 PREGUNTAS (ejemplo + drag incluido)
 const preguntas = [
+{q:"¿Cuál es la función principal del aparato urinario?", a:"Eliminar sustancias de desecho mediante la orina", i:["Transportar oxígeno en la sangre", "Regular la digestión de nutrientes"]},
+{q:"¿Qué órganos forman el aparato urinario?", a:"Riñones, uréteres, vejiga urinaria y uretra", i:["Riñones, hígado y vejiga", "Pulmones, riñones y uretra"]},
+{q:"¿Qué forma tienen los riñones?", a:"Forma de judía", i:["Forma esférica", "Forma triangular"]},
+{q:"¿Dónde se localizan los riñones?", a:"En la cavidad abdominal, en la fosa lumbar", i:["En la cavidad torácica", "En la cavidad craneal"]},
+{q:"¿Por qué el riñón derecho está más bajo que el izquierdo?", a:"Porque está situado debajo del hígado", i:["Porque tiene menor tamaño", "Porque recibe menos sangre"]},
+{q:"¿Cuál es el tamaño aproximado de un riñón adulto?", a:"12 x 7 x 3 cm", i:["20 x 10 x 5 cm", "5 x 3 x 1 cm"]},
+{q:"¿Cuál es el peso aproximado de un riñón?", a:"150 gramos", i:["500 gramos", "50 gramos"]},
+{q:"¿Qué vasos llevan la sangre al riñón?", a:"Arterias renales", i:["Venas renales", "Arterias pulmonares"]},
+{q:"¿De dónde proceden las arterias renales?", a:"De la aorta", i:["De la vena cava", "De la arteria pulmonar"]},
+{q:"¿A dónde drenan las venas renales?", a:"A la vena cava inferior", i:["A la aorta", "A la vena porta"]},
+{q:"¿Cómo se llama la parte externa del riñón?", a:"Corteza renal", i:["Médula renal", "Pelvis renal"]},
+{q:"¿Cómo se llama la parte interna del riñón?", a:"Médula renal", i:["Corteza renal", "Glomérulo renal"]},
+{q:"¿Qué estructuras se encuentran en la médula renal?", a:"Pirámides de Malpighi", i:["Glomérulos", "Alvéolos"]},
+{q:"¿Dónde desembocan las pirámides de Malpighi?", a:"En los cálices renales", i:["En la uretra", "En la vena renal"]},
+{q:"¿Qué estructura se forma al unirse los cálices renales?", a:"Pelvis renal", i:["Uréter", "Nefrona"]},
+{q:"¿Qué estructura continúa a la pelvis renal?", a:"Uréter", i:["Uretra", "Vejiga urinaria"]},
+{q:"¿Cuál es la unidad funcional del riñón?", a:"Nefrona", i:["Neurona", "Alvéolo"]},
+{q:"¿De qué partes se compone la nefrona?", a:"Corpúsculo renal y sistema tubular", i:["Corteza y médula", "Arterias y venas"]},
+{q:"¿Qué forma el corpúsculo renal?", a:"Glomérulo y cápsula de Bowman", i:["Túbulos y cálices", "Arterias y venas"]},
+{q:"¿Qué es el glomérulo de Malpighi?", a:"Una red de capilares sanguíneos", i:["Un conducto urinario", "Una glándula endocrina"]}
 
-  {q:"¿Qué patología presenta episodios de ingesta excesiva y provocación de vómitos?", a:"Bulimia nerviosa", i:["Anorexia nerviosa", "Vigorexia"]},
-    {q:"¿Qué es la esofagitis?", a:"Inflamación del esófago por reflujo gástrico", i:["Infección por virus en la boca", "Cáncer de laringe"]},
-    {q:"¿Qué caracteriza a la enfermedad de Crohn?", a:"Lesiones discontinuas con inflamación de la pared del intestino", i:["Lesiones continuas solo en el recto", "Cálculos en el hígado"]},
-    {q:"¿Qué es la litiasis biliar?", a:"Formación de cálculos en la vesícula biliar", i:["Piedras en el riñón", "Infección de orina"]},
-    {q:"¿Qué es la cirrosis?", a:"Daño crónico e irreversible del hígado", i:["Inflamación aguda del páncreas", "Grasa en el corazón"]},
-    {q:"¿Qué es la hepatitis?", a:"Inflamación del hígado", i:["Inflamación del bazo", "Inflamación del duodeno"]},
-    {q:"¿Qué es la úlcera gástrica?", a:"Pérdida de sustancia en la pared del estómago expuesta al ácido", i:["Inflamación de las encías", "Hemorroide interna"]},
-    {q:"¿Qué es la gastritis?", a:"Enfermedad inflamatoria de la mucosa del estómago", i:["Inflamación del apéndice", "Inflamación de la lengua"]},
-    {q:"¿Qué es la celiaquía?", a:"Intolerancia permanente al gluten", i:["Alergia a la lactosa", "Falta de vitamina C"]},
-    {q:"¿Qué es la anorexia nerviosa?", a:"Rechazo a la comida por distorsión de la imagen corporal", i:["Hambre constante", "Ganas de vomitar"]},
-    {q:"¿Qué es la gingivitis?", a:"Inflamación de las encías", i:["Inflamación de la garganta", "Caries"]},
-    {q:"¿Qué es la halitosis?", a:"Mal aliento persistente", i:["Sangrado nasal", "Dolor al tragar"]},
-    {q:"¿Qué es el meteorismo?", a:"Exceso de gas en el intestino", i:["Vómito con sangre", "Diarrea líquida"]},
-    {q:"¿Qué es la disfagia?", a:"Dificultad o dolor al tragar", i:["Pérdida de visión", "Dolor de oídos"]},
-    {q:"¿Qué es la hematemesis?", a:"Vómito de sangre procedente del tubo digestivo", i:["Sangre en la orina", "Heces negras"]},
-    {q:"¿Qué es la melena?", a:"Heces negras debido a sangre digerida", i:["Vómito amarillo", "Diarrea con moco"]},
-    {q:"¿Qué es la diverticulitis?", a:"Inflamación de pequeñas bolsas en el colon", i:["Cálculos en la vesícula", "Hernia de hiato"]},
-    {q:"¿Qué es la pancreatitis?", a:"Inflamación del páncreas", i:["Inflamación de la parótida", "Dolor lumbar"]},
-    {q:"¿Qué es la ictericia?", a:"Coloración amarillenta por bilirrubina alta", i:["Piel azulada", "Piel roja"]},
-    {q:"¿Qué es la estomatitis?", a:"Inflamación de la mucosa de la boca", i:["Inflamación del recto", "Dolor de muelas"]},
+{q:"¿Cómo se llama la cápsula que rodea al glomérulo?", a:"Cápsula de Bowman", i:["Cápsula renal", "Cápsula de Henle"]},
+{q:"¿Qué parte de la nefrona inicia el sistema tubular?", a:"Túbulo contorneado proximal", i:["Túbulo contorneado distal", "Túbulo colector"]},
+{q:"¿Qué estructura de la nefrona conecta el túbulo proximal con el distal?", a:"Asa de Henle", i:["Glomérulo", "Cápsula de Bowman"]},
+{q:"¿Cuál es la última parte del sistema tubular antes de los túbulos colectores?", a:"Túbulo contorneado distal", i:["Túbulo contorneado proximal", "Asa de Henle"]},
+{q:"¿Dónde desembocan finalmente los túbulos colectores?", a:"En los cálices renales", i:["En la uretra", "En la vejiga"]},
+{q:"¿Qué son los uréteres?", a:"Conductos que llevan la orina desde la pelvis renal a la vejiga", i:["Conductos que llevan sangre al riñón", "Glándulas que producen orina"]},
+{q:"¿Qué tipo de músculo tienen los uréteres en su pared?", a:"Músculo liso", i:["Músculo estriado", "Músculo cardíaco"]},
+{q:"¿Dónde se origina cada uréter?", a:"En la pelvis renal", i:["En la vejiga", "En la uretra"]},
+{q:"¿Dónde terminan los uréteres?", a:"En la vejiga urinaria", i:["En la uretra", "En la pelvis renal"]},
+{q:"¿Qué es la vejiga urinaria?", a:"Un órgano hueco donde se almacena la orina", i:["Una glándula endocrina", "Un conducto excretor"]},
+{q:"¿Dónde está situada la vejiga urinaria?", a:"En la parte inferior del abdomen, detrás del pubis", i:["En la cavidad torácica", "Detrás del hígado"]},
+{q:"¿Qué tipo de epitelio recubre el interior de la vejiga?", a:"Epitelio transicional", i:["Epitelio escamoso", "Epitelio cilíndrico simple"]},
+{q:"¿De qué está formada la pared de la vejiga?", a:"Capas de músculo liso", i:["Tejido óseo", "Cartílago elástico"]},
+{q:"¿Qué es la uretra?", a:"Conducto que lleva la orina al exterior", i:["Conducto que lleva la sangre al riñón", "Órgano que filtra la sangre"]},
+{q:"¿Qué longitud aproximada tiene la uretra femenina?", a:"Entre 2,5 y 6 cm", i:["Entre 10 y 15 cm", "Más de 20 cm"]},
+{q:"¿Qué tipo de conducto es la uretra femenina?", a:"Exclusivamente urinario", i:["Urinario y reproductor", "Solo reproductor"]},
+{q:"¿Dónde termina la uretra femenina?", a:"En el vestíbulo, delante del orificio vaginal", i:["En el útero", "En la vejiga"]},
+{q:"¿Qué longitud aproximada tiene la uretra masculina?", a:"Entre 15 y 20 cm", i:["Entre 2 y 5 cm", "Menos de 1 cm"]},
+{q:"¿Qué tipo de conducto es la uretra masculina?", a:"Urogenital", i:["Exclusivamente urinario", "Solo digestivo"]},
+{q:"¿Qué transporta la uretra masculina al exterior?", a:"Orina y semen", i:["Solo orina", "Solo semen"]}
 
-    // --- BLOQUE 2: PROCESOS QUÍMICOS Y ENZIMAS ---
-    {q:"¿En qué se descomponen las Proteínas?", a:"Aminoácidos", i:["Ácidos grasos", "Glucosa"]},
-    {q:"¿En qué se descomponen las Grasas?", a:"Glicerina y ácidos grasos", i:["Aminoácidos", "Monosacáridos"]},
-    {q:"¿En qué se descompone el Almidón?", a:"Moléculas de glucosa", i:["Ácidos biliares", "Proteínas"]},
-    {q:"¿Qué enzima de la saliva degrada el almidón?", a:"Amilasa salival", i:["Pepsina", "Lipasa"]},
-    {q:"¿Qué enzima digiere proteínas en el estómago?", a:"Pepsina", i:["Ptialina", "Insulina"]},
-    {q:"¿Qué enzima degrada las grasas?", a:"Lipasa", i:["Amilasa", "Renina"]},
-    {q:"¿Qué produce el páncreas para neutralizar el ácido del quimo?", a:"Bicarbonato sódico", i:["Ácido clorhídrico", "Bilis"]},
-    {q:"¿Qué función tiene la bilis?", a:"Emulsionar las grasas", i:["Digerir el azúcar", "Matar bacterias"]},
-    {q:"¿Qué pH tiene el jugo gástrico?", a:"Muy ácido (1-3)", i:["Neutro (7)", "Básico (9)"]},
-    {q:"¿Dónde se vierte la bilis y el jugo pancreático?", a:"Duodeno", i:["Estómago", "Yeyuno"]},
 
-    // --- BLOQUE 3: ANATOMÍA DEL TUBO DIGESTIVO ---
-    {q:"¿Qué longitud tiene el intestino delgado?", a:"Unos 6 metros", i:["1 metro", "15 metros"]},
-    {q:"¿Qué longitud tiene el intestino grueso?", a:"Unos 1,5 metros", i:["5 metros", "50 centímetros"]},
-    {q:"¿Válvula de entrada al estómago?", a:"Cardias", i:["Píloro", "Epiglotis"]},
-    {q:"¿Válvula de salida del estómago?", a:"Píloro", i:["Cardias", "Válvula ileocecal"]},
-    {q:"¿Válvula entre el íleon y el ciego?", a:"Válvula ileocecal", i:["Esfínter de Oddi", "Cardias"]},
-    {q:"¿Cómo se llama la primera porción del intestino delgado?", a:"Duodeno", i:["Yeyuno", "Íleon"]},
-    {q:"¿Cómo se llama la porción central del intestino delgado?", a:"Yeyuno", i:["Duodeno", "Ciego"]},
-    {q:"¿Cómo se llama la porción final del intestino delgado?", a:"Íleon", i:["Recto", "Yeyuno"]},
-    {q:"¿Dónde se localiza el apéndice?", a:"En el ciego", i:["En el duodeno", "En el colon transverso"]},
-    {q:"¿Qué parte del colon tiene forma de S?", a:"Sigmoide", i:["Ascendente", "Descendente"]},
-    {q:"¿Qué órgano es un saco musculoso curvado?", a:"Estómago", i:["Hígado", "Esófago"]},
-    {q:"¿Qué conducto es común para el sistema digestivo y respiratorio?", a:"Faringe", i:["Laringe", "Esófago"]},
-    {q:"¿Qué tubo atraviesa el diafragma?", a:"Esófago", i:["Tráquea", "Aorta"]},
-    {q:"¿Cuál es la glándula más grande del cuerpo?", a:"Hígado", i:["Páncreas", "Bazo"]},
-    {q:"¿Dónde se almacena la bilis?", a:"Vesícula biliar", i:["Hígado", "Duodeno"]},
-    {q:"¿Qué tramo del intestino delgado tiene paredes rugosas y microvellosidades?", a:"Yeyuno", i:["Duodeno", "Ciego"]},
-    {q:"¿Dónde comienza la recuperación de agua?", a:"Intestino grueso", i:["Estómago", "Boca"]},
-    {q:"¿Qué es el peritoneo?", a:"Membrana que recubre la cavidad abdominal", i:["Capa de los dientes", "Músculo del cuello"]},
-    {q:"¿Qué conducto lleva la bilis al duodeno?", a:"Colédoco", i:["Uréter", "Conducto auditivo"]},
-    {q:"¿Qué esfínter regula la bilis en el duodeno?", a:"Esfínter de Oddi", i:["Píloro", "Esfínter anal"]},
+{q:"¿Cuál es una de las funciones principales del riñón?", a:"Eliminar sustancias de desecho de la sangre", i:["Producir hormonas digestivas", "Transportar oxígeno"]},
+{q:"¿Qué regula el riñón mediante la formación de orina?", a:"El volumen y la composición de líquidos y electrolitos", i:["La temperatura corporal exclusivamente", "La producción de enzimas digestivas"]},
+{q:"¿Qué función tiene el riñón sobre la presión arterial?", a:"Controlarla", i:["Aumentarla siempre", "No influye en ella"]},
+{q:"¿Qué proceso relacionado con la sangre controla el riñón?", a:"Hematopoyesis", i:["Hemólisis", "Coagulación"]},
+{q:"¿Qué vitamina activa el riñón?", a:"Vitamina D", i:["Vitamina C", "Vitamina B12"]},
+{q:"¿Qué equilibrio regula el riñón?", a:"El pH", i:["El equilibrio térmico", "El equilibrio muscular"]},
+{q:"¿Cuáles son los tres procesos de formación de la orina?", a:"Filtración, reabsorción y secreción", i:["Digestión, absorción y excreción", "Filtración, transporte y eliminación"]},
+{q:"¿Dónde se produce la filtración inicial de la sangre?", a:"En el glomérulo", i:["En la uretra", "En la vejiga"]},
+{q:"¿Por dónde llega la sangre al glomérulo?", a:"Por la arteriola aferente", i:["Por la vena renal", "Por la uretra"]},
+{q:"¿De dónde procede la arteriola aferente?", a:"De la arteria renal", i:["De la vena cava", "De la arteria pulmonar"]},
+{q:"¿Qué ocurre en los capilares del glomérulo?", a:"La filtración de la sangre", i:["La secreción de hormonas", "La absorción de oxígeno"]},
+{q:"¿A dónde pasa el líquido filtrado tras el glomérulo?", a:"A la cápsula de Bowman", i:["A la uretra", "A la vejiga"]},
+{q:"¿Qué contiene el líquido filtrado?", a:"Componentes procedentes de la sangre", i:["Solo células sanguíneas", "Solo proteínas grandes"]},
+{q:"¿Qué ocurre durante la reabsorción tubular?", a:"Sustancias vuelven a la sangre", i:["Sustancias salen del cuerpo", "Se destruyen células"]},
+{q:"¿Qué ocurre durante la secreción tubular?", a:"Sustancias pasan desde la sangre a los túbulos", i:["Sustancias salen directamente al exterior", "Se produce filtración"]},
+{q:"¿Dónde se realizan la reabsorción y secreción?", a:"En los túbulos renales", i:["En la vejiga", "En la uretra"]},
+{q:"¿Qué rodea a los túbulos renales?", a:"Capilares sanguíneos", i:["Tejido óseo", "Cartílago"]},
+{q:"¿Cuándo adquiere la orina su composición definitiva?", a:"En los túbulos colectores", i:["En el glomérulo", "En la uretra"]},
+{q:"¿Qué ocurre con la sangre tras la filtración?", a:"Vuelve libre de desechos a las venas renales", i:["Se elimina como orina", "Se almacena en la vejiga"]},
+{q:"¿De qué depende la regulación de la formación de orina?", a:"De las necesidades del organismo", i:["Solo de la edad", "Solo del peso corporal"]}
 
-    // --- BLOQUE 4: DIENTES Y BOCA ---
-    {q:"¿Dientes para cortar?", a:"Incisivos", i:["Caninos", "Molares"]},
-    {q:"¿Dientes para desgarrar?", a:"Caninos", i:["Incisivos", "Premolares"]},
-    {q:"¿Dientes para triturar?", a:"Molares", i:["Incisivos", "Caninos"]},
-    {q:"¿Cuántos dientes tiene un niño (leche)?", a:"20", i:["32", "28"]},
-    {q:"¿Cuántos dientes tiene un adulto?", a:"32", i:["20", "28"]},
-    {q:"¿Qué es el esmalte?", a:"La capa más externa y dura del diente", i:["La raíz del diente", "La encía"]},
-    {q:"¿Qué es la dentina?", a:"La capa situada bajo el esmalte", i:["El nervio del diente", "El sarro"]},
-    {q:"¿Qué es la pulpa dental?", a:"Zona interna con vasos y nervios", i:["El hueso de la mandíbula", "La corona"]},
-    {q:"¿Glándula salival más grande?", a:"Parótida", i:["Sublingual", "Submaxilar"]},
-    {q:"¿Qué es la deglución?", a:"El acto de tragar", i:["Masticar", "Hacer la digestión"]},
 
-    // --- BLOQUE 5: FISIOLOGÍA Y SALUD ---
-    {q:"¿Qué es el bolo alimenticio?", a:"Alimento mezclado con saliva", i:["Alimento con jugo gástrico", "Heces"]},
-    {q:"¿Qué es el quimo?", a:"Alimento mezclado con jugo gástrico", i:["Bolo alimenticio", "Quilo"]},
-    {q:"¿Qué es el quilo?", a:"Masa lechosa en el intestino delgado", i:["Quimo", "Saliva"]},
-    {q:"¿Dónde se absorbe la Vitamina B12?", a:"Íleon", i:["Estómago", "Boca"]},
-    {q:"¿Qué es el peristaltismo?", a:"Movimientos de contracción del tubo digestivo", i:["Digestión química", "Masticación"]},
-    {q:"¿Qué produce el páncreas para la sangre?", a:"Insulina y Glucagón", i:["Bilis", "Ácido"]},
-    {q:"¿Qué es la absorción?", a:"Paso de nutrientes a la sangre", i:["Expulsión de desechos", "Tragar"]},
-    {q:"¿Qué es la egestión?", a:"Expulsión de restos no digeridos", i:["Digerir carne", "Absorber agua"]},
-    {q:"¿Qué previene la fibra?", a:"Estreñimiento", i:["Caries", "Hepatitis"]},
-    {q:"¿Qué es el metabolismo basal?", a:"Energía mínima para mantener la vida en reposo", i:["Energía para correr", "Digerir grasa"]},
+{q:"¿Qué es la hematuria?", a:"Presencia de sangre en la orina", i:["Presencia de glucosa en la orina", "Presencia de proteínas en sangre"]},
+{q:"¿Qué tipo de hematuria es visible a simple vista?", a:"Hematuria macroscópica", i:["Hematuria microscópica", "Hematuria latente"]},
+{q:"¿Qué es la hematuria microscópica?", a:"Sangre en la orina no visible a simple vista", i:["Sangre visible en la orina", "Ausencia de sangre en la orina"]},
+{q:"¿Cuál es una causa frecuente de hematuria?", a:"Infecciones del tracto urinario", i:["Falta de vitaminas", "Hipoglucemia"]},
+{q:"¿Qué es la hemoglobinuria?", a:"Presencia de hemoglobina libre en la orina", i:["Presencia de glóbulos blancos en la sangre", "Presencia de bacterias en la orina"]},
+{q:"¿Qué provoca la hemoglobinuria?", a:"Hemólisis en la sangre circulante", i:["Infección bacteriana local", "Déficit de hierro"]},
+{q:"¿Qué es la piuria?", a:"Presencia de pus en la orina", i:["Presencia de sangre en la orina", "Presencia de glucosa en sangre"]},
+{q:"¿Qué es la proteinuria?", a:"Presencia de proteínas en la orina", i:["Presencia de lípidos en sangre", "Ausencia de proteínas en orina"]},
+{q:"¿Qué indica la proteinuria?", a:"Alteración en la filtración glomerular", i:["Problema en la digestión", "Fallo hepático"]},
+{q:"¿Qué es la leucocituria?", a:"Aumento de leucocitos en la orina", i:["Disminución de leucocitos en sangre", "Aumento de glóbulos rojos en sangre"]},
+{q:"¿Con qué suele estar relacionada la leucocituria?", a:"Infección urinaria", i:["Hipertensión", "Diabetes"]},
+{q:"¿Qué es la bacteriuria?", a:"Presencia de bacterias en la orina", i:["Ausencia de bacterias en sangre", "Presencia de virus en sangre"]},
+{q:"¿Cuál es la bacteria más frecuente en infecciones urinarias?", a:"E. coli", i:["Staphylococcus aureus", "Salmonella"]},
+{q:"¿Qué es la cilindruria?", a:"Presencia de estructuras cilíndricas en la orina", i:["Presencia de cálculos en el riñón", "Aumento de glucosa en sangre"]},
+{q:"¿De qué pueden estar formados los cilindros urinarios?", a:"Células, proteínas o elementos sanguíneos", i:["Solo grasa", "Solo aire"]},
+{q:"¿Qué es la glucosuria?", a:"Presencia de glucosa en la orina", i:["Ausencia de glucosa en sangre", "Exceso de proteínas en sangre"]},
+{q:"¿En qué enfermedad aparece la glucosuria?", a:"Diabetes mellitus", i:["Hipertensión arterial", "Anemia"]},
+{q:"¿Qué es la anuria?", a:"Ausencia de formación de orina", i:["Exceso de orina", "Dolor al orinar"]},
+{q:"¿Qué es la oliguria?", a:"Disminución del volumen de orina", i:["Aumento de orina", "Ausencia total de orina"]},
+{q:"¿Qué es la poliuria?", a:"Aumento del volumen de orina", i:["Disminución de orina", "Dolor al orinar"]}
 
-    // --- BLOQUE 6: PATOLOGÍAS EXTRAS ---
-    {q:"¿Qué es la proctitis?", a:"Inflamación del recto", i:["Inflamación de la lengua", "Dolor gástrico"]},
-    {q:"¿Qué es la glositis?", a:"Inflamación de la lengua", i:["Inflamación del bazo", "Heces negras"]},
-    {q:"¿Qué es la hematemesis?", a:"Vómito con sangre", i:["Heces con sangre", "Orina roja"]},
-    {q:"¿Qué es la colitis ulcerosa?", a:"Inflamación continua del colon y recto", i:["Cálculos", "Reflujo"]},
-    {q:"¿Qué microorganismo causa úlceras?", a:"Helicobacter pylori", i:["Salmonella", "Gripe"]},
-    {q:"¿Qué es una hernia de hiato?", a:"Paso de parte del estómago al tórax", i:["Hernia en el ombligo", "Cálculos"]},
-    {q:"¿Qué es la ascititis?", a:"Acumulación de líquido en el abdomen", i:["Gases", "Hambre"]},
-    {q:"¿Qué es la estenosis?", a:"Estrechamiento de un conducto", i:["Rotura de un órgano", "Inflamación"]},
-    {q:"¿Qué es un pólipo?", a:"Crecimiento anormal de la mucosa", i:["Un virus", "Una bacteria"]},
-    {q:"¿Qué es la diverticulosis?", a:"Presencia de bolsas en la pared del colon", i:["Inflamación de la boca", "Falta de bilis"]},
 
-    // --- BLOQUE 7: FUNCIONES Y NUTRIENTES ---
-    {q:"¿Función del hígado?", a:"Metabolismo y desintoxicación", i:["Digerir solo fibra", "Producir insulina"]},
-    {q:"¿Qué nutriente da energía a largo plazo?", a:"Lípidos", i:["Vitaminas", "Agua"]},
-    {q:"¿Qué nutriente es estructural?", a:"Proteínas", i:["Azúcar", "Sales"]},
-    {q:"¿Qué es una enzima?", a:"Proteína que acelera reacciones químicas", i:["Un mineral", "Un tipo de grasa"]},
-    {q:"¿Dónde se absorbe el alcohol?", a:"Estómago", i:["Boca", "Ano"]},
-    {q:"¿Qué es la bilis?", a:"Líquido amarillento producido por el hígado", i:["Ácido clorhídrico", "Saliva"]},
-    {q:"¿Qué es el glucógeno?", a:"Reserva de glucosa en el hígado", i:["Grasa corporal", "Vitamina"]},
-    {q:"¿Qué es la flora intestinal?", a:"Bacterias beneficiosas del colon", i:["Virus del estómago", "Plantas"]},
-    {q:"¿Qué es la bilirrubina?", a:"Pigmento de la bilis", i:["Una enzima", "Un azúcar"]},
-    {q:"¿Qué es el moco gástrico?", a:"Protector de la pared del estómago", i:["Digeridor de carne", "Veneno"]},
+{q:"¿Qué es la micción?", a:"El proceso de vaciado de la vejiga", i:["La formación de la orina", "El filtrado de la sangre"]},
+{q:"¿Qué es la polaquiuria?", a:"Aumento del número de micciones sin aumentar el volumen", i:["Aumento del volumen de orina", "Disminución de micciones"]},
+{q:"¿Qué es la disuria?", a:"Dolor o dificultad al orinar", i:["Ausencia de orina", "Aumento de la frecuencia urinaria"]},
+{q:"¿Qué es el tenesmo vesical?", a:"Deseo persistente de orinar tras la micción", i:["Ausencia total de ganas de orinar", "Dolor en los riñones"]},
+{q:"¿Qué es la incontinencia urinaria?", a:"Imposibilidad de retener la orina", i:["Imposibilidad de formar orina", "Dolor al orinar"]},
+{q:"¿Qué es la retención de orina?", a:"Imposibilidad de orinar", i:["Exceso de orina", "Dolor leve al orinar"]},
+{q:"¿Qué incluye el síndrome miccional?", a:"Disuria, polaquiuria y urgencia miccional", i:["Anuria, oliguria y poliuria", "Hematuria y glucosuria"]},
+{q:"¿Qué es el síndrome nefrótico?", a:"Daño en vasos renales con exceso de proteínas en orina", i:["Inflamación de la vejiga", "Infección de la uretra"]},
+{q:"¿Qué caracteriza al síndrome nefrítico?", a:"Inflamación de los glomérulos con hematuria", i:["Exceso de glucosa en sangre", "Ausencia de filtración renal"]},
+{q:"¿Qué es la insuficiencia renal aguda (IRA)?", a:"Pérdida repentina de la capacidad de filtración", i:["Pérdida lenta de función renal", "Inflamación de la vejiga"]},
+{q:"¿Qué es la enfermedad renal crónica (ERC)?", a:"Pérdida progresiva de la función renal", i:["Pérdida repentina de la función renal", "Infección aguda del riñón"]},
+{q:"¿En qué se basa la clasificación de la ERC?", a:"En el filtrado glomerular", i:["En la presión arterial", "En el volumen de orina"]},
+{q:"¿Qué es la glomerulonefritis?", a:"Inflamación del glomérulo de origen inmunitario", i:["Infección de la uretra", "Inflamación de la vejiga"]},
+{q:"¿Qué caracteriza a la glomerulonefritis?", a:"Disminución de la función glomerular", i:["Aumento de la filtración", "Producción excesiva de orina"]},
+{q:"¿Qué es la nefritis tubulointersticial?", a:"Inflamación de túbulos e intersticio renal", i:["Inflamación de la uretra", "Inflamación de la vejiga"]},
+{q:"¿Cuándo se denomina pielonefritis?", a:"Cuando se afecta también la pelvis renal", i:["Cuando solo afecta la uretra", "Cuando solo afecta la vejiga"]},
+{q:"¿Qué son las nefropatías vasculares?", a:"Alteraciones renales por problemas vasculares", i:["Infecciones del riñón", "Tumores del riñón"]},
+{q:"¿Qué enfermedades pueden causar nefropatías vasculares?", a:"Arteriosclerosis e hipertensión", i:["Diabetes y anemia", "Asma y bronquitis"]},
+{q:"¿Cuál es el tumor renal más frecuente?", a:"Hipernefroma o adenocarcinoma", i:["Carcinoma pulmonar", "Melanoma"]},
+{q:"¿Cómo suele detectarse el tumor renal?", a:"De forma casual", i:["Siempre con dolor intenso", "Solo mediante cirugía"]}
 
-    // --- BLOQUE 8: PROCEDIMIENTOS Y SÍNTOMAS ---
-    {q:"¿Qué es una endoscopia?", a:"Prueba visual del interior del tubo", i:["Análisis de sangre", "Radiografía"]},
-    {q:"¿Qué es la ecografía?", a:"Uso de ultrasonidos para ver órganos", i:["Uso de rayos X", "Uso de imanes"]},
-    {q:"¿Qué es la litotricia?", a:"Fragmentación de cálculos", i:["Quitar el hígado", "Coser una úlcera"]},
-    {q:"¿Qué es la sonda nasogástrica?", a:"Tubo de la nariz al estómago", i:["Tubo al pulmón", "Tubo al corazón"]},
-    {q:"¿Qué es el tenesmo?", a:"Ganas constantes de defecar", i:["Vómito", "Hipo"]},
-    {q:"¿Qué es el eructo?", a:"Expulsión de aire por la boca", i:["Gas rectal", "Tos"]},
-    {q:"¿Qué es la náusea?", a:"Sensación de querer vomitar", i:["Dolor de muelas", "Sueño"]},
-    {q:"¿Qué es la obesidad?", a:"Exceso de grasa corporal", i:["Falta de peso", "Mucha altura"]},
-    {q:"¿Qué es la deshidratación?", a:"Pérdida excesiva de agua", i:["Beber mucho", "Comer sal"]},
-    {q:"¿Qué es el factor intrínseco?", a:"Proteína para absorber B12", i:["Hormona del crecimiento", "Ácido"]},
 
-    // --- BLOQUE 9: ANATOMÍA ESPECÍFICA ---
-    {q:"¿Qué es el colon ascendente?", a:"Tramo derecho del intestino grueso", i:["Tramo izquierdo", "El recto"]},
-    {q:"¿Qué es el colon descendente?", a:"Tramo izquierdo del intestino grueso", i:["Tramo derecho", "El ciego"]},
-    {q:"¿Qué es el colon transverso?", a:"Tramo horizontal del intestino grueso", i:["El ano", "El esófago"]},
-    {q:"¿Qué es el cardias?", a:"Esfínter entre esófago y estómago", i:["Esfínter del ano", "Hígado"]},
-    {q:"¿Qué es el píloro?", a:"Esfínter entre estómago y duodeno", i:["Entrada al estómago", "Boca"]},
-    {q:"¿Qué es el mesenterio?", a:"Repliegue que sujeta el intestino", i:["Parte del diente", "Un músculo"]},
-    {q:"¿Qué es la úvula?", a:"La campanilla", i:["La epiglotis", "La lengua"]},
-    {q:"¿Qué es el paladar?", a:"Techo de la boca", i:["Suelo de la boca", "Diente"]},
-    {q:"¿Qué es la amígdala?", a:"Órgano linfoide de la faringe", i:["Órgano digestivo", "Parte del ojo"]},
-    {q:"¿Qué es el ligamento falciforme?", a:"Sujeta el hígado al diafragma", i:["Sujeta el estómago", "Une dientes"]},
+{q:"¿Cuál es la vía más frecuente de infección urinaria?", a:"Ascenso de bacterias desde la uretra", i:["Transmisión aérea", "A través de la piel"]},
+{q:"¿Por qué son más frecuentes las infecciones urinarias en mujeres?", a:"Porque la uretra es más corta y cercana al ano", i:["Porque producen más orina", "Porque tienen riñones más pequeños"]},
+{q:"¿En qué personas son frecuentes las infecciones urinarias además de en mujeres?", a:"Portadores de sonda vesical", i:["Personas deportistas", "Personas con dieta equilibrada"]},
+{q:"¿Cuál es la manifestación clínica más frecuente de las ITU?", a:"Síndrome miccional", i:["Hipertensión arterial", "Dolor torácico"]},
+{q:"¿Cómo se diagnostican las infecciones urinarias?", a:"Por presencia de microorganismos en la orina", i:["Por análisis de sangre exclusivamente", "Por radiografía"]},
+{q:"¿Cuál es la prueba definitiva para diagnosticar una ITU?", a:"Urinocultivo", i:["Radiografía abdominal", "Electrocardiograma"]},
+{q:"¿Cómo se tratan las infecciones urinarias?", a:"Con antibióticos", i:["Con antihistamínicos", "Con analgésicos únicamente"]},
+{q:"¿Cómo se denomina la infección de la uretra?", a:"Uretritis", i:["Cistitis", "Pielonefritis"]},
+{q:"¿Cómo se denomina la infección de la vejiga?", a:"Cistitis", i:["Uretritis", "Pielitis"]},
+{q:"¿Cómo se denomina la infección del uréter?", a:"Ureteritis", i:["Cistitis", "Uretritis"]},
+{q:"¿Cómo se denomina la infección de la pelvis renal?", a:"Pielitis", i:["Cistitis", "Uretritis"]},
+{q:"¿Cómo se denomina la infección del riñón?", a:"Pielonefritis", i:["Uretritis", "Cistitis"]},
+{q:"¿Qué es la urolitiasis?", a:"Presencia de cálculos en la vía urinaria", i:["Infección bacteriana renal", "Inflamación de la vejiga"]},
+{q:"¿Cuál es el síntoma más característico de la urolitiasis?", a:"Cólico renal", i:["Dolor torácico", "Dolor muscular leve"]},
+{q:"¿Cómo es el dolor del cólico renal?", a:"Agudo e intenso irradiado a ingle y genitales", i:["Leve y localizado en el pecho", "Difuso sin irradiación"]},
+{q:"¿Cómo se diagnostica la urolitiasis?", a:"Mediante ecografía o urografía", i:["Solo análisis de sangre", "Electroencefalograma"]},
+{q:"¿Por qué se analiza la composición del cálculo?", a:"Para prevenir recidivas", i:["Para medir la presión arterial", "Para detectar infecciones"]},
+{q:"¿Qué tratamiento puede usarse en la urolitiasis?", a:"Litotricia", i:["Radioterapia", "Quimioterapia"]},
+{q:"¿Qué es la litotricia?", a:"Fragmentación del cálculo para su expulsión", i:["Eliminación del riñón", "Aumento del tamaño del cálculo"]},
+{q:"¿Qué es la hidronefrosis?", a:"Dilatación de cálices y pelvis renal por obstrucción", i:["Inflamación de la vejiga", "Infección de la uretra"]}
 
-    // --- BLOQUE 10: VARIADOS ---
-    {q:"¿Qué es la ptialina?", a:"Amilasa salival", i:["Pepsina", "Bilis"]},
-    {q:"¿Qué es la digestión mecánica?", a:"Acción física (masticar/batir)", i:["Acción química", "Absorber"]},
-    {q:"¿Qué es la digestión química?", a:"Acción de enzimas y jugos", i:["Masticar", "Correr"]},
-    {q:"¿Qué vitamina es la K?", a:"Vitamina para la coagulación", i:["Para la vista", "Para los huesos"]},
-    {q:"¿Qué es la pepsina?", a:"Enzima que rompe proteínas", i:["Rompe grasas", "Rompe azúcar"]},
-    {q:"¿Qué es el colédoco?", a:"Conducto común de bilis", i:["Vena del brazo", "Nervio"]},
-    {q:"¿Qué es el cístico?", a:"Conducto de la vesícula", i:["Conducto del riñón", "Arteria"]},
-    {q:"¿Qué es el conducto de Wirsung?", a:"Conducto principal del páncreas", i:["Del hígado", "De la saliva"]},
-    {q:"¿Qué es la ampolla de Vater?", a:"Donde desembocan los conductos en el duodeno", i:["Parte del recto", "En el ojo"]},
-    {q:"¿Qué es el glucagón?", a:"Hormona que sube el azúcar", i:["Baja el azúcar", "Diere carne"]},
-    {q:"¿Qué es la insulina?", a:"Hormona que baja el azúcar", i:["Sube el azúcar", "Produce bilis"]},
-    {q:"¿Qué es el esmalte?", a:"Tejido más duro del cuerpo", i:["Hueso", "Cartílago"]},
-    {q:"¿Qué es el cemento?", a:"Capa que rodea la raíz dental", i:["Parte de la corona", "Encía"]},
-    {q:"¿Qué es el ligamento periodontal?", a:"Sujeta el diente al hueso", i:["Sujeta el estómago", "Une labios"]},
-    {q:"¿Qué es la encía?", a:"Mucosa que rodea el diente", i:["Parte interna del diente", "Lengua"]},
-    {q:"¿Qué es la corona?", a:"Parte visible del diente", i:["Parte invisible", "Hueso"]},
-    {q:"¿Qué es el cuello dental?", a:"Unión corona y raíz", i:["Punta del diente", "Mandíbula"]},
-    {q:"¿Qué es la raíz dental?", a:"Parte insertada en el hueso", i:["Parte blanca", "Sarro"]},
-    {q:"¿Qué es la placa bacteriana?", a:"Película de bacterias en dientes", i:["Comida limpia", "Pasta dental"]},
-    {q:"¿Pregunta final: Has estudiado?", a:"Sí, soy un crack", i:["No, soy un inútil", "Mañana lo hago"]}
+
+
+{q:"¿Cuál es la función principal del aparato genital femenino?", a:"La reproducción", i:["La digestión", "La respiración"]},
+{q:"¿Qué estructuras forman los genitales externos femeninos?", a:"La vulva", i:["Los ovarios", "El útero"]},
+{q:"¿Qué estructuras forman los genitales internos femeninos?", a:"Ovarios, trompas de Falopio, útero y vagina", i:["Vulva y clítoris", "Útero y uretra"]},
+{q:"¿Qué órganos están relacionados con la reproducción pero no forman parte de los genitales?", a:"Glándulas mamarias", i:["Pulmones", "Riñones"]},
+{q:"¿Qué son los ovarios?", a:"Órganos que producen óvulos y hormonas femeninas", i:["Conductos de transporte de óvulos", "Glándulas digestivas"]},
+{q:"¿Dónde se sitúan los ovarios?", a:"En la cavidad pélvica a ambos lados del útero", i:["En la cavidad abdominal superior", "En la vejiga"]},
+{q:"¿Qué forma tienen los ovarios?", a:"Ovalada", i:["Esférica", "Triangular"]},
+{q:"¿Qué peso aproximado tiene cada ovario?", a:"3 gramos", i:["30 gramos", "300 gramos"]},
+{q:"¿Qué dos funciones principales tienen los ovarios?", a:"Formación de óvulos y secreción de hormonas", i:["Filtrar sangre y producir orina", "Transportar nutrientes y oxígeno"]},
+{q:"¿Qué hormonas producen los ovarios?", a:"Estrógenos y progesterona", i:["Testosterona y adrenalina", "Insulina y glucagón"]},
+{q:"¿Qué son las trompas de Falopio?", a:"Conductos que conectan ovarios con el útero", i:["Glándulas hormonales", "Órganos musculares independientes"]},
+{q:"¿Dónde suele producirse la fecundación?", a:"En las trompas de Falopio", i:["En el útero", "En la vagina"]},
+{q:"¿Qué ocurre con el óvulo tras la ovulación?", a:"Es captado por las trompas de Falopio", i:["Se elimina directamente", "Permanece en el ovario"]},
+{q:"¿Qué es el útero?", a:"Órgano hueco donde se desarrolla el embarazo", i:["Conducto urinario", "Glándula endocrina"]},
+{q:"¿Dónde se sitúa el útero?", a:"Entre la vejiga urinaria y el recto", i:["Entre los pulmones", "Encima del hígado"]},
+{q:"¿Qué forma tiene el útero?", a:"Forma de pera", i:["Forma esférica", "Forma cúbica"]},
+{q:"¿Qué partes tiene el útero?", a:"Cuerpo uterino y cérvix", i:["Corteza y médula", "Cabeza y cola"]},
+{q:"¿Qué es el cérvix?", a:"Conducto que comunica el útero con la vagina", i:["Parte superior del útero", "Glándula endocrina"]},
+{q:"¿Cuál es la capa más externa del útero?", a:"Serosa", i:["Miometrio", "Endometrio"]},
+{q:"¿Qué tipo de tejido forma el miometrio?", a:"Músculo liso", i:["Tejido óseo", "Cartílago"]}
+
+
+{q:"¿Qué es el endometrio?", a:"Capa mucosa interna del útero que se desprende en el ciclo menstrual", i:["Capa muscular del útero", "Capa externa del útero"]},
+{q:"¿Cuál es la función principal del útero?", a:"La gestación", i:["La producción de hormonas digestivas", "El filtrado de la sangre"]},
+{q:"¿Dónde se implanta el óvulo fecundado?", a:"En el útero", i:["En la vagina", "En las trompas"]},
+{q:"¿Qué es la vagina?", a:"Un conducto elástico que comunica el útero con el exterior", i:["Una glándula endocrina", "Un órgano urinario"]},
+{q:"¿Dónde se localiza la vagina?", a:"Entre la vejiga y el recto", i:["Entre los pulmones", "Encima del hígado"]},
+{q:"¿Qué tipo de tejido predomina en la vagina?", a:"Músculo liso", i:["Tejido óseo", "Cartílago"]},
+{q:"¿Qué funciones tiene la vagina?", a:"Recepción del pene y salida del feto", i:["Producción de hormonas", "Filtración de la sangre"]},
+{q:"¿Qué es el himen?", a:"Membrana que cubre parcialmente la entrada de la vagina", i:["Glándula hormonal", "Parte del útero"]},
+{q:"¿Qué es la vulva?", a:"Conjunto de genitales externos femeninos", i:["Órgano interno reproductor", "Conducto urinario"]},
+{q:"¿Qué es el monte de Venus?", a:"Prominencia grasa sobre el pubis", i:["Glándula reproductora", "Conducto urinario"]},
+{q:"¿Qué contienen los labios mayores?", a:"Glándulas y terminaciones nerviosas", i:["Tejido óseo", "Cartílago"]},
+{q:"¿Qué caracteriza a los labios menores?", a:"No tienen folículos pilosos pero sí glándulas", i:["Tienen abundante vello", "Carecen de glándulas"]},
+{q:"¿Qué función tienen las glándulas de Bartholino?", a:"Producir lubricación vaginal", i:["Producir óvulos", "Filtrar sangre"]},
+{q:"¿Qué es el clítoris?", a:"Estructura eréctil con terminaciones nerviosas", i:["Glándula endocrina", "Conducto urinario"]},
+{q:"¿Qué son las glándulas mamarias?", a:"Glándulas que producen leche", i:["Órganos urinarios", "Glándulas digestivas"]},
+{q:"¿Qué tipo de glándulas son las mamarias?", a:"Exocrinas", i:["Endocrinas", "Mixtas"]},
+{q:"¿Qué tejido forma principalmente la mama?", a:"Tejido glandular, adiposo y conjuntivo", i:["Tejido óseo y cartílago", "Tejido muscular únicamente"]},
+{q:"¿Cómo se organiza el tejido glandular mamario?", a:"En lóbulos", i:["En capas óseas", "En cavidades líquidas"]},
+{q:"¿Qué transporta la leche hasta el pezón?", a:"Conductos galactóforos", i:["Uréteres", "Conductos deferentes"]},
+{q:"¿Qué regula la producción de leche?", a:"Hormonas relacionadas con el embarazo", i:["Sistema digestivo", "Sistema urinario"]}
+
+
+{q:"¿Qué estructuras forman el aparato genital masculino?", a:"Testículos, escroto, pene, epidídimo, conductos y glándulas", i:["Riñones, vejiga y uretra", "Pulmones y corazón"]},
+{q:"¿Qué son los testículos?", a:"Órganos que producen espermatozoides y hormonas sexuales", i:["Conductos urinarios", "Glándulas digestivas"]},
+{q:"¿Qué forma tienen los testículos?", a:"Ovalada", i:["Esférica", "Triangular"]},
+{q:"¿Dónde se encuentran los testículos?", a:"En el escroto", i:["En la cavidad abdominal", "En la pelvis"]},
+{q:"¿Por qué los testículos están en el escroto?", a:"Para mantener la temperatura adecuada", i:["Para producir más sangre", "Para almacenar orina"]},
+{q:"¿Qué producen los testículos además de espermatozoides?", a:"Hormonas sexuales masculinas", i:["Glucosa", "Vitaminas"]},
+{q:"¿Cómo se llaman los gametos masculinos?", a:"Espermatozoides", i:["Óvulos", "Leucocitos"]},
+{q:"¿Dónde se producen los espermatozoides?", a:"En los tubos seminíferos", i:["En la uretra", "En la próstata"]},
+{q:"¿Cuándo comienza la producción de espermatozoides?", a:"En la pubertad", i:["En el nacimiento", "En la vejez"]},
+{q:"¿Qué parte del espermatozoide contiene el material genético?", a:"La cabeza", i:["El flagelo", "El cuello"]},
+{q:"¿Qué función tiene el flagelo del espermatozoide?", a:"Dar movilidad", i:["Transportar nutrientes", "Producir hormonas"]},
+{q:"¿Qué es el epidídimo?", a:"Conducto donde se almacenan y maduran los espermatozoides", i:["Glándula hormonal", "Parte del pene"]},
+{q:"¿Qué ocurre en el epidídimo?", a:"Maduración de los espermatozoides", i:["Producción de óvulos", "Filtración de sangre"]},
+{q:"¿Qué es el conducto deferente?", a:"Conducto que transporta espermatozoides", i:["Conducto urinario", "Glándula endocrina"]},
+{q:"¿Qué forma el conducto eyaculador?", a:"Unión del deferente con vesículas seminales", i:["Unión de uretra y vejiga", "Unión de próstata y uretra"]},
+{q:"¿Dónde desemboca el conducto eyaculador?", a:"En la uretra", i:["En la vejiga", "En el escroto"]},
+{q:"¿Qué tipo de conducto es la uretra masculina?", a:"Urinario y reproductor", i:["Solo urinario", "Solo digestivo"]},
+{q:"¿Cuántas partes tiene la uretra masculina?", a:"Tres", i:["Dos", "Cuatro"]},
+{q:"¿Cuáles son las partes de la uretra masculina?", a:"Prostática, membranosa y peneana", i:["Cortical, medular y distal", "Superior, media e inferior"]},
+{q:"¿Qué son las glándulas accesorias?", a:"Glándulas que producen componentes del semen", i:["Órganos urinarios", "Conductos sanguíneos"]}
+
+
+{q:"¿Qué producen las glándulas accesorias masculinas?", a:"Sustancias que junto a los espermatozoides forman el semen", i:["Orina", "Hormonas digestivas"]},
+{q:"¿Qué son las vesículas seminales?", a:"Glándulas que aportan líquido al semen", i:["Conductos urinarios", "Glándulas endocrinas"]},
+{q:"¿Dónde se sitúan las vesículas seminales?", a:"Detrás de la vejiga urinaria", i:["Encima del riñón", "Dentro del pene"]},
+{q:"¿Dónde se encuentra la próstata?", a:"Debajo de la vejiga", i:["Encima del riñón", "Dentro del escroto"]},
+{q:"¿Qué atraviesa la próstata?", a:"La uretra", i:["El uréter", "La vena renal"]},
+{q:"¿Qué son las glándulas bulbouretrales?", a:"Glándulas pequeñas debajo de la próstata", i:["Glándulas digestivas", "Órganos urinarios"]},
+{q:"¿Qué es el pene?", a:"Órgano eréctil del aparato reproductor masculino", i:["Glándula endocrina", "Conducto urinario"]},
+{q:"¿Cuántas estructuras eréctiles tiene el pene?", a:"Tres", i:["Dos", "Cuatro"]},
+{q:"¿Cuáles son las estructuras eréctiles del pene?", a:"Dos cuerpos cavernosos y un cuerpo esponjoso", i:["Dos cuerpos esponjosos y uno cavernoso", "Tres cuerpos cavernosos"]},
+{q:"¿Dónde se encuentra el cuerpo esponjoso?", a:"En la parte inferior del pene", i:["En la parte superior", "En el escroto"]},
+{q:"¿Qué son los cuerpos cavernosos?", a:"Estructuras eréctiles superiores del pene", i:["Conductos urinarios", "Glándulas reproductoras"]},
+{q:"¿Qué es el glande?", a:"Extremo distal del pene", i:["Base del pene", "Conducto urinario"]},
+{q:"¿Qué es el prepucio?", a:"Pliegue de piel que cubre el glande", i:["Glándula endocrina", "Parte del escroto"]},
+{q:"¿Qué es la ovogénesis?", a:"Proceso de formación de óvulos", i:["Formación de espermatozoides", "Producción de hormonas masculinas"]},
+{q:"¿Dónde tiene lugar la ovogénesis?", a:"En el ovario", i:["En el útero", "En la vagina"]},
+{q:"¿Cuándo comienza la ovogénesis?", a:"En la etapa embrionaria", i:["En la pubertad", "En la edad adulta"]},
+{q:"¿Qué ocurre tras el nacimiento con la ovogénesis?", a:"Se detiene hasta la pubertad", i:["Se acelera continuamente", "Finaliza definitivamente"]},
+{q:"¿Qué ocurre en la pubertad respecto a los óvulos?", a:"Comienza su maduración y expulsión", i:["Se dejan de producir", "Se destruyen completamente"]},
+{q:"¿Cómo se llama la expulsión del óvulo?", a:"Ovulación", i:["Fecundación", "Implantación"]},
+{q:"¿Qué tipo de células son los óvulos?", a:"Gametos femeninos", i:["Células somáticas", "Leucocitos"]}
+
+
+{q:"¿Qué hormonas sexuales femeninas produce el ovario?", a:"Estrógenos y progesterona", i:["Testosterona y adrenalina", "Insulina y glucagón"]},
+{q:"¿Qué función tienen los estrógenos?", a:"Desarrollo de caracteres sexuales femeninos", i:["Producción de espermatozoides", "Control de la digestión"]},
+{q:"¿Qué función tiene la progesterona?", a:"Preparar el útero para la gestación", i:["Aumentar la glucosa en sangre", "Regular la respiración"]},
+{q:"¿Qué regula la progesterona además de la gestación?", a:"El ciclo menstrual", i:["La presión arterial", "La temperatura corporal"]},
+{q:"¿Qué es el ciclo menstrual?", a:"Conjunto de cambios fisiológicos periódicos", i:["Proceso digestivo", "Proceso respiratorio"]},
+{q:"¿Cuándo comienza el ciclo menstrual?", a:"El primer día de la menstruación", i:["En la ovulación", "Al final de la menstruación"]},
+{q:"¿Cuándo termina el ciclo menstrual?", a:"El día anterior a la siguiente menstruación", i:["Durante la ovulación", "Al inicio de la menstruación"]},
+{q:"¿Qué ocurre en la mitad del ciclo menstrual?", a:"La ovulación", i:["La fecundación", "La implantación"]},
+{q:"¿Qué ocurre en la segunda fase del ciclo menstrual?", a:"El endometrio se prepara para la gestación", i:["Se destruyen los ovarios", "Se elimina el útero"]},
+{q:"¿Qué ocurre si no hay fecundación?", a:"El endometrio se desprende", i:["Se detiene el ciclo menstrual", "Se forma el embrión"]},
+{q:"¿Qué es la menstruación?", a:"Expulsión del endometrio", i:["Formación del embrión", "Producción de hormonas"]},
+{q:"¿Qué es la fecundación?", a:"Unión del óvulo y el espermatozoide", i:["Expulsión del óvulo", "Formación de la placenta"]},
+{q:"¿Cómo se forman los gametos femeninos?", a:"Mediante meiosis", i:["Mitosis", "Fisión binaria"]},
+{q:"¿Cuántos cromosomas tienen los óvulos?", a:"23", i:["46", "92"]},
+{q:"¿Qué significa que los óvulos sean haploides?", a:"Tienen la mitad de cromosomas", i:["Tienen el doble de cromosomas", "No tienen ADN"]},
+{q:"¿Qué ocurre con el endometrio durante el ciclo?", a:"Se engrosa para posible gestación", i:["Se elimina constantemente", "Permanece igual"]},
+{q:"¿Qué regula el ciclo menstrual?", a:"Hormonas sexuales", i:["Sistema digestivo", "Sistema nervioso exclusivamente"]},
+{q:"¿Qué función tienen los estrógenos en el ciclo?", a:"Iniciar el ciclo menstrual", i:["Finalizar la gestación", "Eliminar el óvulo"]},
+{q:"¿Qué preparan las glándulas mamarias?", a:"La lactancia", i:["La digestión", "La respiración"]},
+{q:"¿Qué sincroniza la producción de leche?", a:"El embarazo", i:["La digestión", "El ejercicio físico"]}
+
+
+{q:"¿Cuál es la causa más frecuente de inflamación genital femenina?", a:"Infecciones", i:["Traumatismos", "Déficit vitamínico"]},
+{q:"¿Qué tipo de infecciones son más frecuentes en genitales femeninos?", a:"Enfermedades de transmisión sexual", i:["Infecciones respiratorias", "Infecciones digestivas"]},
+{q:"¿Qué es la vulvitis?", a:"Inflamación de la vulva", i:["Inflamación del útero", "Inflamación de la vagina"]},
+{q:"¿Qué es la vaginitis?", a:"Inflamación de la vagina", i:["Inflamación del ovario", "Inflamación del útero"]},
+{q:"¿Qué otro nombre recibe la vaginitis?", a:"Colpitis", i:["Endometritis", "Salpingitis"]},
+{q:"¿Cuál es la causa más frecuente de vaginitis?", a:"Infección por Candida albicans", i:["Infección viral", "Déficit hormonal"]},
+{q:"¿Qué es la cervicitis?", a:"Inflamación del cuello del útero", i:["Inflamación del ovario", "Inflamación de la vejiga"]},
+{q:"¿Qué es la endometritis?", a:"Inflamación del endometrio", i:["Inflamación del miometrio", "Inflamación de la vulva"]},
+{q:"¿Qué es la salpingitis?", a:"Inflamación de las trompas de Falopio", i:["Inflamación del útero", "Inflamación de la vagina"]},
+{q:"¿Qué es la ooforitis?", a:"Inflamación de los ovarios", i:["Inflamación del útero", "Inflamación de la uretra"]},
+{q:"¿Qué es la enfermedad inflamatoria pélvica?", a:"Infección de varios órganos pélvicos", i:["Inflamación de la vejiga", "Infección del riñón"]},
+{q:"¿Qué puede provocar la enfermedad inflamatoria pélvica?", a:"Infertilidad", i:["Hipertensión", "Diabetes"]},
+{q:"¿Qué es el cáncer de cérvix?", a:"Tumor maligno del cuello uterino", i:["Tumor benigno del ovario", "Inflamación del útero"]},
+{q:"¿Cuál es la causa principal del cáncer de cérvix?", a:"Virus del papiloma humano (VPH)", i:["Bacterias intestinales", "Déficit hormonal"]},
+{q:"¿Cómo es la evolución del cáncer de cérvix?", a:"Lenta", i:["Muy rápida siempre", "Inexistente"]},
+{q:"¿Qué permite evitar el cáncer de cérvix?", a:"Detectar lesiones premalignas", i:["Aumentar la dieta", "Hacer ejercicio"]},
+{q:"¿Qué significa LSIL?", a:"Lesión intraepitelial escamosa de bajo grado", i:["Lesión tumoral invasiva", "Infección bacteriana leve"]},
+{q:"¿Qué significa HSIL?", a:"Lesión intraepitelial escamosa de alto grado", i:["Lesión benigna", "Inflamación leve"]},
+{q:"¿Qué prueba detecta lesiones premalignas del cérvix?", a:"Citología cervical", i:["Radiografía", "Electrocardiograma"]},
+{q:"¿Qué técnica detecta el VPH?", a:"PCR", i:["Electroencefalograma", "Ecografía"]}
+
+
+{q:"¿Qué es la hiperplasia endometrial?", a:"Alteración benigna con riesgo de malignización", i:["Tumor maligno seguro", "Infección bacteriana"]},
+{q:"¿Qué son los pólipos endometriales?", a:"Neoplasias benignas", i:["Tumores malignos", "Infecciones virales"]},
+{q:"¿Qué es el adenocarcinoma de endometrio?", a:"Neoplasia maligna", i:["Tumor benigno", "Inflamación leve"]},
+{q:"¿Qué es el leiomioma?", a:"Tumor benigno del músculo uterino", i:["Tumor maligno del ovario", "Inflamación del útero"]},
+{q:"¿Qué es el leiomiosarcoma?", a:"Tumor maligno del músculo uterino", i:["Tumor benigno", "Infección uterina"]},
+{q:"¿Qué son los quistes ováricos?", a:"Tumores benignos del ovario", i:["Tumores malignos siempre", "Infecciones bacterianas"]},
+{q:"¿Por qué los tumores malignos de ovario tienen mal pronóstico?", a:"Se detectan en fases avanzadas", i:["Se curan fácilmente", "No producen síntomas nunca"]},
+{q:"¿Cuál es el origen más frecuente de tumores ováricos malignos?", a:"Epitelial", i:["Muscular", "Óseo"]},
+{q:"¿Qué es la endometriosis?", a:"Presencia de tejido endometrial fuera del útero", i:["Inflamación de la vejiga", "Tumor del ovario"]},
+{q:"¿Dónde aparece con frecuencia la endometriosis?", a:"Ovario y peritoneo pélvico", i:["Pulmones", "Corazón"]},
+{q:"¿Qué provoca la endometriosis?", a:"Dolor y sangrado", i:["Hipertensión", "Fiebre leve"]},
+{q:"¿Qué es la mastitis?", a:"Inflamación de la mama", i:["Tumor maligno", "Infección urinaria"]},
+{q:"¿Qué es la ectasia ductal?", a:"Alteración de conductos mamarios", i:["Tumor maligno", "Infección renal"]},
+{q:"¿Qué es la mastopatía fibroquística?", a:"Alteración benigna de la mama", i:["Tumor maligno", "Inflamación del útero"]},
+{q:"¿Qué es el fibroadenoma?", a:"Tumor benigno de la mama", i:["Tumor maligno", "Infección bacteriana"]},
+{q:"¿Qué es el papiloma intraductal?", a:"Tumor benigno en conductos mamarios", i:["Tumor maligno", "Inflamación del ovario"]},
+{q:"¿Cuál es el tumor maligno más frecuente de la mama?", a:"Carcinoma", i:["Fibroadenoma", "Quiste"]},
+{q:"¿Dónde se originan los tumores malignos mamarios más frecuentes?", a:"En el tejido epitelial", i:["En el tejido óseo", "En el tejido muscular"]},
+{q:"¿Qué tipos de carcinoma mamario son más frecuentes?", a:"Ductal y lobulillar", i:["Óseo y muscular", "Vascular y nervioso"]},
+{q:"¿Cómo se mejora el pronóstico del cáncer de mama?", a:"Diagnóstico precoz", i:["Tratamiento tardío", "Evitar revisiones"]}
+
+
+{q:"¿A qué suelen estar asociados los procesos inflamatorios genitales masculinos?", a:"Enfermedades de transmisión sexual", i:["Enfermedades digestivas", "Enfermedades respiratorias"]},
+{q:"¿Qué es la balanitis?", a:"Inflamación del glande", i:["Inflamación del testículo", "Inflamación de la próstata"]},
+{q:"¿Qué es la balanopostitis?", a:"Inflamación del glande y el prepucio", i:["Inflamación del epidídimo", "Inflamación de la uretra"]},
+{q:"¿Qué es la epididimitis?", a:"Inflamación del epidídimo", i:["Inflamación del testículo", "Inflamación de la vejiga"]},
+{q:"¿Qué es la orquitis?", a:"Inflamación del testículo", i:["Inflamación del pene", "Inflamación de la próstata"]},
+{q:"¿Qué es la orquiepididimitis?", a:"Inflamación del testículo y epidídimo", i:["Inflamación del pene y uretra", "Inflamación de la vejiga"]},
+{q:"¿Qué es la prostatitis?", a:"Inflamación de la próstata", i:["Inflamación del riñón", "Inflamación del hígado"]},
+{q:"¿Cuál es el origen más frecuente de tumores testiculares malignos?", a:"Células germinales", i:["Tejido muscular", "Tejido óseo"]},
+{q:"¿Qué es el seminoma?", a:"Tumor maligno testicular", i:["Tumor benigno", "Infección bacteriana"]},
+{q:"¿Qué es el carcinoma embrionario?", a:"Tumor maligno testicular", i:["Tumor benigno", "Inflamación"]},
+{q:"¿Qué es el tumor del saco vitelino?", a:"Neoplasia maligna testicular", i:["Tumor benigno", "Infección urinaria"]},
+{q:"¿Qué es el coriocarcinoma?", a:"Tumor maligno testicular", i:["Tumor benigno", "Inflamación del pene"]},
+{q:"¿Qué es el teratoma?", a:"Tumor testicular de origen germinal", i:["Infección bacteriana", "Tumor hepático"]},
+{q:"¿Qué es la hiperplasia benigna de próstata?", a:"Aumento benigno del tamaño prostático", i:["Tumor maligno", "Inflamación aguda"]},
+{q:"¿Qué provoca la hiperplasia prostática?", a:"Compresión de la uretra", i:["Aumento de la presión arterial", "Dolor muscular"]},
+{q:"¿Qué dificulta la hiperplasia benigna de próstata?", a:"El vaciado de la vejiga", i:["La respiración", "La digestión"]},
+{q:"¿Qué es el cáncer de próstata?", a:"Tumor maligno prostático", i:["Tumor benigno", "Inflamación leve"]},
+{q:"¿Cómo pueden ser los síntomas del cáncer de próstata?", a:"Similares a la hiperplasia prostática", i:["Totalmente distintos", "Inexistentes siempre"]},
+{q:"¿Qué puede indicar síntomas iniciales del cáncer de próstata?", a:"Metástasis", i:["Hipoglucemia", "Hipertensión"]},
+{q:"¿Qué prueba es útil para el diagnóstico del cáncer de próstata?", a:"PSA", i:["Electrocardiograma", "Radiografía de tórax"]}
+// 🖼️ DRAG FEMENINO
+{
+tipo:"drag",
+q:"Coloca las partes del aparato genital femenino",
+img:"femenino.jpg",
+zonas:["utero","ovario","trompa","vagina","cervix"],
+opciones:["utero","ovario","trompa","vagina","cervix"]
+},
+
+// 🖼️ DRAG MASCULINO
+{
+tipo:"drag",
+q:"Coloca las partes del aparato genital masculino",
+img:"masculino.jpg",
+zonas:["testiculo","epididimo","prostata","uretra","pene"],
+opciones:["testiculo","epididimo","prostata","uretra","pene"]
+},
+
+// 🔥 añade aquí tus 280 preguntas si quieres
 ];
 
-let juego = [];
-let i = 0;
-let ok = 0;
-let tiempo = TIEMPO_TOTAL;
-let intervalo;
-
 function iniciar(){
-
-i=0;
-ok=0;
-tiempo=TIEMPO_TOTAL;
+i=0;ok=0;racha=0;tiempo=TIEMPO_TOTAL;
 
 juego = preguntas.sort(()=>Math.random()-0.5).slice(0,POR_PARTIDA);
 
@@ -252,114 +392,108 @@ document.getElementById("progress").innerHTML =
 Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
 
 clearInterval(intervalo);
-intervalo = setInterval(tick,1000);
+intervalo=setInterval(()=>{
+tiempo--;
+document.getElementById("timer").textContent =
+Math.floor(tiempo/60)+":"+String(tiempo%60).padStart(2,'0');
+if(tiempo<=0)resultado();
+},1000);
 
 mostrar();
-}
-
-function tick(){
-
-tiempo--;
-
-const m = String(Math.floor(tiempo/60)).padStart(2,'0');
-const s = String(tiempo%60).padStart(2,'0');
-
-document.getElementById("timer").textContent = `${m}:${s}`;
-
-if(tiempo<=0){
-mostrarResultado();
-}
-
 }
 
 function mostrar(){
 
-const app = document.getElementById("app");
+if(i>=juego.length){resultado();return;}
 
-if(i>=juego.length){
-mostrarResultado();
-return;
+let p=juego[i];
+
+if(p.tipo==="drag"){mostrarDrag(p);return;}
+
+let ops=[p.a,...p.i].sort(()=>Math.random()-0.5);
+
+app.innerHTML=`<div class="card"><h3>${i+1}. ${p.q}</h3>`+
+ops.map(o=>`<button onclick="responder(this,'${p.a}')">${o}</button>`).join("")+
+`</div>`;
 }
 
-const p = juego[i];
+function responder(btn,resp){
 
-const opciones = [p.a,...p.i].sort(()=>Math.random()-0.5);
-
-let html = `<div class="card"><h3>${i+1}. ${p.q}</h3>`;
-
-opciones.forEach(op=>{
-
-html += `<button onclick="responder(this,'${p.a.replace(/'/g,"\\'")}')">${op}</button>`;
-
-});
-
-html += `</div>`;
-
-app.innerHTML = html;
-
-}
-
-function responder(btn,respuesta){
-
-const botones = document.querySelectorAll("button");
-
+let botones=document.querySelectorAll("button");
 botones.forEach(b=>b.disabled=true);
 
-const sq = document.querySelectorAll(".square")[i];
+let sq=document.querySelectorAll(".square")[i];
 
-if(btn.innerText===respuesta){
-
+if(btn.innerText===resp){
 btn.classList.add("correct");
 sq.classList.add("ok");
-ok++;
-
-setTimeout(()=>{
-i++;
-mostrar();
-},1200);
-
+ok++;racha++;
 }else{
-
 btn.classList.add("incorrect");
-btn.innerText="¡INÚTIL! ❌";
+btn.innerText="INÚTIL ❌";
 sq.classList.add("ko");
-
-botones.forEach(b=>{
-if(b.innerText===respuesta){
-b.classList.add("correct");
+racha=0;
 }
+
+document.getElementById("racha").innerHTML=racha>=3?`🔥 ${racha}`:"";
+
+setTimeout(()=>{i++;mostrar();},1200);
+}
+
+// DRAG
+let dragged;
+
+function mostrarDrag(p){
+
+app.innerHTML=`<div class="card"><h3>${p.q}</h3>
+<img src="${p.img}" style="width:100%">
+${p.zonas.map(z=>`<div class="drop" data-correct="${z}"></div>`).join("")}
+${p.opciones.map(o=>`<div class="drag" draggable="true" data-name="${o}">${o}</div>`).join("")}
+<button onclick="checkDrag()">Comprobar</button></div>`;
+
+document.querySelectorAll(".drag").forEach(d=>{
+d.ondragstart=()=>dragged=d;
 });
 
-setTimeout(()=>{
-i++;
-mostrar();
-},3000);
-
+document.querySelectorAll(".drop").forEach(z=>{
+z.ondragover=e=>e.preventDefault();
+z.ondrop=e=>{
+if(!z.firstChild)z.appendChild(dragged);
+};
+});
 }
 
+function checkDrag(){
+
+let correct=0;
+document.querySelectorAll(".drop").forEach(z=>{
+if(z.firstChild && z.firstChild.dataset.name===z.dataset.correct)correct++;
+});
+
+let sq=document.querySelectorAll(".square")[i];
+
+if(correct===document.querySelectorAll(".drop").length){
+sq.classList.add("ok");ok++;racha++;
+}else{
+sq.classList.add("ko");racha=0;
 }
 
-function mostrarResultado(){
+setTimeout(()=>{i++;mostrar();},1200);
+}
+
+function resultado(){
 
 clearInterval(intervalo);
 
-const porcentaje = (ok/POR_PARTIDA)*100;
-
-let mensaje = porcentaje>=70 ? "¡ESTÁS LISTO!" : "¡ESTUDIA MÁS, INÚTIL!";
-
-document.getElementById("app").innerHTML = `
-<div class="card result">
-<h2>${mensaje}</h2>
-<p style="font-size:40px;font-weight:bold;">${ok} / ${POR_PARTIDA}</p>
-<button onclick="location.reload()">Nueva partida</button>
-</div>
-`;
-
+app.innerHTML=`<div class="card">
+<h2>${ok>=14?"🔥 CRACK":"ESTUDIA MÁS INÚTIL"}</h2>
+<p>${ok}/20</p>
+<button onclick="location.reload()">Reiniciar</button>
+</div>`;
 }
 
 iniciar();
 
 </script>
-
 </body>
 </html>
