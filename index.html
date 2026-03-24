@@ -16,6 +16,7 @@ h1 { text-align:center; }
 .square.ko{background:#dc3545;}
 
 #timer{font-weight:bold;}
+#contador{font-size:14px;font-weight:bold;text-align:right;}
 
 .card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;}
 
@@ -41,7 +42,13 @@ button.incorrect{background:#dc3545 !important;}
 
 <div id="topbar">
 <div id="progress"></div>
-<div id="timer">20:00</div>
+
+<!-- 🔥 NUEVO BLOQUE DERECHA -->
+<div style="display:flex;flex-direction:column;align-items:flex-end;">
+  <div id="contador">0 / 0</div>
+  <div id="timer">20:00</div>
+</div>
+
 </div>
 
 <div id="racha" class="racha"></div>
@@ -54,7 +61,11 @@ const TIEMPO_TOTAL = 1200;
 
 let juego=[],i=0,ok=0,tiempo=TIEMPO_TOTAL,intervalo,racha=0;
 
-// 🧠 PREGUNTAS (ejemplo + drag incluido)
+// 🔥 NUEVO SISTEMA
+let preguntasVistas = new Set();
+let totalPreguntas = 0;
+
+// 🧠 PREGUNTAS
 const preguntas = [
 {q:"¿Cuál es la función principal del aparato urinario?", a:"Eliminar sustancias de desecho mediante la orina", i:["Transportar oxígeno en la sangre", "Regular la digestión de nutrientes"]},
 {q:"¿Qué órganos forman el aparato urinario?", a:"Riñones, uréteres, vejiga urinaria y uretra", i:["Riñones, hígado y vejiga", "Pulmones, riñones y uretra"]},
