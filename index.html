@@ -257,7 +257,6 @@ const preguntas = [
 {q:"¿Qué problema puede indicar una descarga rápida de la batería?",a:"Una posible avería en la fuente de alimentación o en la batería",i:["Un fallo del microcontrolador exclusivamente","Un exceso de tamaño del electrodo"]},
 {q:"¿Cuál es una comprobación básica de la fuente de alimentación?",a:"Medir la tensión con un multímetro",i:["Medir la frecuencia con un potenciómetro","Comprobar la forma de onda con un electrodo"]},
 {q:"¿Cuál de estos es un síntoma de avería de la fuente de alimentación?",a:"El equipo no enciende",i:["El paciente cambia de posición","El electrodo aumenta de tamaño"]},
-
 {q:"¿Cuál es la función principal del microcontrolador?",a:"Gobernar el funcionamiento del equipo",i:["Generar directamente la corriente terapéutica","Proteger físicamente al paciente de las corrientes de fuga"]},
 {q:"¿Qué parámetros puede controlar el microcontrolador?",a:"Intensidad, frecuencia, anchura de pulso y tiempo de tratamiento",i:["Solo la tensión de entrada","Únicamente la temperatura del paciente"]},
 {q:"¿Qué ocurre cuando el fisioterapeuta selecciona los parámetros de un tratamiento?",a:"El microcontrolador configura automáticamente esos parámetros",i:["La fuente de alimentación cambia físicamente los electrodos","El paciente configura directamente el generador"]},
@@ -266,7 +265,6 @@ const preguntas = [
 {q:"¿Cuál de estas puede ser una avería del microcontrolador?",a:"Los menús no responden",i:["Una corriente de fuga en el paciente","Una batería físicamente descargada"]},
 {q:"¿Qué comprobación puede realizarse sobre el microcontrolador?",a:"Probar los botones",i:["Medir el tamaño de los electrodos","Medir directamente la resistencia de la piel"]},
 {q:"¿Cuál es una idea fundamental sobre el microcontrolador?",a:"No genera la corriente terapéutica, sino que gobierna el funcionamiento del equipo",i:["Genera toda la corriente terapéutica","Sustituye al sistema de aislamiento eléctrico"]},
-
 {q:"¿Cuál es la función del generador de impulsos?",a:"Producir la señal eléctrica que posteriormente se aplicará al paciente",i:["Amplificar la señal hasta su nivel final","Proteger al paciente de las corrientes de fuga"]},
 {q:"¿Qué tipo de señal puede generar un generador de impulsos?",a:"Ondas rectangulares",i:["Únicamente señales acústicas","Solo señales procedentes de la batería"]},
 {q:"¿Qué tipo de onda puede generar un equipo de rehabilitación?",a:"Ondas bifásicas",i:["Ondas exclusivamente mecánicas","Ondas producidas por el sistema de aislamiento"]},
@@ -276,7 +274,6 @@ const preguntas = [
 {q:"¿Qué instrumento permite comprobar la señal del generador de impulsos?",a:"Un osciloscopio",i:["Un potenciómetro","Un transformador de aislamiento"]},
 {q:"¿Qué instrumento especializado puede utilizarse para comprobar el generador?",a:"Un analizador de electroterapia",i:["Un encoder","Un optoacoplador"]},
 {q:"¿Por qué la señal del generador todavía no es suficiente para estimular al paciente?",a:"Porque todavía no tiene suficiente energía",i:["Porque todavía no tiene frecuencia","Porque no puede producir ninguna forma de onda"]},
-
 {q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal generada para que pueda aplicarse al paciente",i:["Crear las órdenes del usuario","Medir el estado de la piel"]},
 {q:"¿Por qué es necesaria la etapa de potencia?",a:"Porque la señal del generador es demasiado pequeña para producir por sí sola la estimulación terapéutica",i:["Porque el microcontrolador no puede recibir órdenes","Porque elimina la necesidad de electrodos"]},
 {q:"¿Qué puede amplificar la etapa de potencia?",a:"La tensión y la corriente",i:["La humedad y la distancia entre electrodos","El tamaño y el peso del paciente"]},
@@ -334,25 +331,15 @@ const preguntas = [
 {q:"¿Cuál es uno de los principales objetivos terapéuticos de la electroterapia?",a:"Analgesia",i:["Realizar radiografías","Medir la glucosa","Eliminar completamente la movilidad muscular"]},
 {q:"¿Qué otros objetivos terapéuticos tiene la electroterapia?",a:"Estimulación muscular, reeducación neuromuscular, mejora de la circulación y reducción del edema",i:["Solo aumentar la temperatura corporal","Solo medir la frecuencia cardíaca","Solo realizar diagnósticos por imagen"]},
 {q:"¿Qué diferencia existe entre estimulación sensitiva y motora?",a:"La sensitiva busca efectos analgésicos sin contracción muscular y la motora provoca contracciones musculares controladas",i:["Ambas producen siempre la misma contracción","La sensitiva siempre produce contracciones intensas","La motora no activa fibras nerviosas"]},
-
 {q:"¿Qué tipo de fibras se activan en la estimulación sensitiva?",a:"Fibras nerviosas sensitivas",i:["Fibras musculares exclusivamente","Fibras motoras exclusivamente","Células óseas"]},
-
 {q:"¿Cuál es el objetivo principal de la estimulación sensitiva?",a:"La analgesia",i:["La contracción muscular","La producción de calor","La reducción de la frecuencia cardíaca"]},
-
 {q:"¿Qué intensidad suele utilizarse en la estimulación sensitiva?",a:"Baja",i:["Siempre alta","Siempre máxima","Nula"]},
-
 {q:"¿Se produce movimiento muscular durante la estimulación sensitiva?",a:"No",i:["Sí, siempre","Solo con intensidad máxima","Solo durante la fase de reposo"]},
-
 {q:"¿Qué sensación suele percibir el paciente durante la estimulación sensitiva?",a:"Hormigueo",i:["Contracción intensa","Dolor intenso","Ausencia total de sensación"]},
-
 {q:"¿Qué equipo es típico de la estimulación sensitiva?",a:"TENS",i:["EMS","Corrientes rusas exclusivamente","Multímetro"]},
-
 {q:"¿Qué tipo de fibras se activan principalmente en la estimulación motora?",a:"Fibras nerviosas motoras",i:["Fibras sensitivas exclusivamente","Células óseas","Fibras ópticas"]},
-
 {q:"¿Cuál es el objetivo principal de la estimulación motora?",a:"Provocar contracciones musculares controladas",i:["Producir únicamente hormigueo","Medir la impedancia","Eliminar toda sensación del paciente"]},
-
 {q:"¿Qué intensidad suele utilizarse en la estimulación motora?",a:"Media-alta",i:["Siempre baja","Nula","Siempre mínima"]},
-
 {q:"¿Se produce movimiento muscular durante la estimulación motora?",a:"Sí",i:["No","Solo durante el apagado","Nunca"]},
 
 {q:"¿Qué sensación suele percibir el paciente durante la estimulación motora?",a:"Contracción",i:["Solo hormigueo","Frío","Ausencia total de sensación"]},
