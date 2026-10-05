@@ -5,383 +5,326 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quiz Examen 1 Rehabilitación</title>
   <style>
+    :root {
+      --bg: #f3f5f7;
+      --card: #ffffff;
+      --primary: #007aff;
+      --correct: #28a745;
+      --wrong: #dc3545;
+      --text: #1d1d1f;
+      --muted: #666;
+      --border: #dfe3e8;
+    }
+
     * { box-sizing: border-box; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 15px;
       margin: 0;
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #fff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      font-size: 28px;
+      margin: 0 0 18px;
+      font-size: clamp(28px, 5vw, 42px);
     }
 
-    #topbar {
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .topbar {
       display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
       align-items: center;
-      background: rgba(255,255,255,0.1);
-      padding: 12px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
-    #progress {
-      display: grid;
-      grid-template-columns: repeat(20, 1fr);
-      gap: 4px;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .square {
+    .barra-externa {
+      width: 100%;
       height: 12px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.3);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      background: #ddd;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
     }
 
-    .square.ok { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
-    .square.ko { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
-
-    #timer {
-      font-weight: bold;
-      min-width: 70px;
-      text-align: right;
-      color: #fff;
-      font-size: 18px;
+    .barra-interna {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.2s ease;
     }
 
-    #contador {
-      font-size: 14px;
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
       font-weight: bold;
-      text-align: right;
-      min-width: 90px;
-      color: rgba(255,255,255,0.9);
+      min-width: 110px;
+      text-align: center;
     }
 
     .card {
-      background: rgba(255,255,255,0.95);
-      padding: 20px;
-      border-radius: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      margin-bottom: 18px;
     }
 
-    .card h3 {
-      margin-top: 0;
-      color: #333;
-      font-size: 16px;
-      line-height: 1.5;
-      margin-bottom: 15px;
+    .pregunta-meta {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    .pregunta {
+      font-size: clamp(18px, 3vw, 28px);
+      line-height: 1.4;
+      margin: 0 0 18px;
+    }
+
+    .opciones {
+      display: grid;
+      gap: 12px;
     }
 
     button {
       width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      font-size: 15px;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--primary);
       color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 500;
-      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+      transition: transform 0.15s ease, opacity 0.2s ease;
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      opacity: 0.95;
     }
 
-    button:active {
-      transform: translateY(0);
+    button:disabled {
+      cursor: default;
+      opacity: 1;
     }
 
-    button.correct { 
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-      box-shadow: 0 4px 15px rgba(16,185,129,0.4) !important;
+    button.correct {
+      background: var(--correct);
     }
 
-    button.incorrect { 
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-      box-shadow: 0 4px 15px rgba(239,68,68,0.4) !important;
+    button.incorrect {
+      background: var(--wrong);
     }
 
-    button:disabled { cursor: default; opacity: 0.95; }
-
-    .racha {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 10px;
-      min-height: 28px;
-      font-weight: bold;
-      color: #fbbf24;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    .nombre-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-bottom: 18px;
     }
 
-    .resumen {
-      text-align: center;
-      padding: 20px 15px;
-    }
-
-    .resumen h2 {
-      color: #333;
-      margin-top: 0;
-      font-size: 24px;
-    }
-
-    .stat-box {
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      padding: 12px;
-      border-radius: 8px;
-      margin: 10px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-left: 4px solid #667eea;
-    }
-
-    .stat-box strong {
-      color: #667eea;
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
       font-size: 16px;
     }
 
-    .leaderboard-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .leaderboard {
-      background: rgba(255,255,255,0.95);
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-      max-height: 380px;
-      overflow-y: auto;
-    }
-
-    .leaderboard::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .leaderboard::-webkit-scrollbar-track {
-      background: rgba(0,0,0,0.05);
-      border-radius: 3px;
-    }
-
-    .leaderboard::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 3px;
-    }
-
-    .leaderboard h3 {
-      margin-top: 0;
+    .result-box {
       text-align: center;
-      border-bottom: 3px solid #667eea;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-      color: #333;
+      padding: 18px;
     }
 
-    .leaderboard-row {
-      display: grid;
-      grid-template-columns: 40px 1fr 70px;
-      gap: 10px;
-      align-items: center;
-      padding: 10px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-
-    .leaderboard-row:hover {
-      background: #f9fafb;
-    }
-
-    .leaderboard-row:last-child {
-      border-bottom: none;
-    }
-
-    .rank {
+    .resultado-final {
+      font-size: clamp(24px, 4vw, 40px);
+      margin-bottom: 14px;
       font-weight: bold;
+    }
+
+    .racha {
       text-align: center;
-      font-size: 18px;
-    }
-
-    .rank.top1 { color: #fbbf24; }
-    .rank.top2 { color: #d1d5db; }
-    .rank.top3 { color: #f59e0b; }
-
-    .name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: #333;
-      font-weight: 500;
-    }
-
-    .score {
-      text-align: right;
+      font-size: 20px;
+      margin: 16px 0;
       font-weight: bold;
-      color: #667eea;
-      font-size: 15px;
+      min-height: 28px;
     }
 
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .button-group button {
-      margin: 0;
-      flex: 1;
-    }
-
-    .progress-bar {
-      height: 10px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 5px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #10b981 0%, #fbbf24 100%);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    @media (max-width: 768px) {
-      .leaderboard-container {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
-
-      .leaderboard-row {
-        grid-template-columns: 30px 1fr 60px;
-        font-size: 13px;
-      }
+    @media (max-width: 600px) {
+      body { padding: 16px; }
+      .nombre-box { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <h1>🏥 Quiz Rehabilitación - Tema 1</h1>
+  <div class="container">
+    <h1>Dios nos pille confesados</h1>
 
-  <div class="progress-bar">
-    <div class="progress-bar-fill" id="barraGlobal"></div>
-  </div>
-
-  <div id="topbar">
-    <div id="progress"></div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;">
-      <div id="contador">0 / 0</div>
-      <div id="timer">20:00</div>
+    <div class="barra-externa">
+      <div id="barraGlobal" class="barra-interna"></div>
     </div>
+
+    <div class="topbar">
+      <div class="stats">
+        <div id="contador" class="badge">0 / 0</div>
+        <div id="timer" class="badge">02:00</div>
+      </div>
+    </div>
+
+    <div id="racha" class="racha"></div>
+    <div id="app"></div>
   </div>
-
-  <div id="racha" class="racha"></div>
-  <div id="app"></div>
-
-  <!-- Firebase SDK v9+ -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 
   <script>
-    // ✅ CONFIGURACIÓN FIREBASE - REEMPLAZA CON LA TUYA
-    const firebaseConfig = {
-      apiKey: "AIzaSyBDhRrPUIrlXloHXKYigUOeAAwYVLbGUGo",
-      authDomain: "puntuaciones-quiz.firebaseapp.com",
-      databaseURL: "https://puntuaciones-quiz-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "puntuaciones-quiz",
-      storageBucket: "puntuaciones-quiz.firebasestorage.app",
-      messagingSenderId: "445308980709",
-      appId: "1:445308980709:web:4f90ad74bc80c9944e730c"
-    };
+    const app = document.getElementById('app');
+    const contadorEl = document.getElementById('contador');
+    const timerEl = document.getElementById('timer');
+    const barraGlobalEl = document.getElementById('barraGlobal');
+    const rachaEl = document.getElementById('racha');
 
-    // Inicializar Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const TOTAL_SEGUNDOS = 120;
+    const MAX_PREGUNTAS = 10;
 
-    const app = document.getElementById("app");
-    const progressEl = document.getElementById("progress");
-    const contadorEl = document.getElementById("contador");
-    const timerEl = document.getElementById("timer");
-    const barraGlobal = document.getElementById("barraGlobal");
-    const rachaEl = document.getElementById("racha");
-
-    const POR_PARTIDA = 20;
-    const TIEMPO_TOTAL = 1200;
-
-    let juego = [];
-    let i = 0;
-    let ok = 0;
-    let tiempo = TIEMPO_TOTAL;
-    let intervalo = null;
+    let preguntasJuego = [];
+    let indiceActual = 0;
+    let aciertos = 0;
+    let tiempoRestante = TOTAL_SEGUNDOS;
+    let timerId = null;
     let racha = 0;
-    let respondidas = 0;
-    let jugador = localStorage.getItem("jugador") || "Jugador";
+    let jugador = localStorage.getItem('jugador') || '';
 
     const preguntas = [
-      { q: "¿Cuál es la función de la fuente de alimentación en un sistema de rehabilitación?", a: "Suministrar la energía necesaria para el funcionamiento del equipo", i: ["Generar directamente la corriente terapéutica", "Medir la temperatura del paciente", "Controlar la frecuencia cardiaca"] },
-      { q: "¿Cuál de estos elementos puede formar parte de una fuente de alimentación?", a: "Baterías", i: ["Microcontroladores", "Electrodos", "Pantalla táctil"] },
-      { q: "¿Qué parámetro de la fuente de alimentación es importante conocer?", a: "La tensión de entrada y salida", i: ["La frecuencia cardiaca del paciente", "La distancia entre electrodos", "El color de la carcasa"] },
-      { q: "¿Qué elemento permite almacenar energía para utilizarla posteriormente?", a: "Una batería recargable", i: ["Un optoacoplador", "Un osciloscopio", "Un teclado"] },
-      { q: "¿Cuál es la función principal del microcontrolador?", a: "Gobernar el funcionamiento del equipo", i: ["Generar directamente la corriente terapéutica", "Proteger físicamente al paciente", "Cambiar la temperatura ambiente"] },
-      { q: "¿Qué parámetros puede controlar el microcontrolador?", a: "Intensidad, frecuencia, anchura de pulso y tiempo de tratamiento", i: ["Solo la tensión de entrada", "Únicamente la temperatura del paciente", "La distancia entre electrodos"] },
-      { q: "¿Cuál es la función del generador de impulsos?", a: "Producir la señal eléctrica que posteriormente se aplicará al paciente", i: ["Amplificar la señal hasta el nivel final", "Proteger al paciente", "Mostrar la batería"] },
-      { q: "¿Qué tipo de señal puede generar un generador de impulsos?", a: "Ondas rectangulares", i: ["Únicamente señales acústicas", "Solo señales procedentes de la batería", "Señales de luz"] },
-      { q: "¿Cuál es la función de la etapa de potencia?", a: "Amplificar la señal generada para que pueda aplicarse al paciente", i: ["Crear las órdenes del usuario", "Medir el estado de la piel", "Seleccionar la fuente de alimentación"] },
-      { q: "¿Por qué es necesaria la etapa de potencia?", a: "Porque la señal del generador es demasiado pequeña", i: ["Porque el paciente necesita más pintura", "Porque el microcontrolador no puede medir", "Porque la batería no funciona"] },
-      { q: "¿Qué bloque tiene como prioridad proteger al paciente frente a riesgos eléctricos?", a: "El sistema de aislamiento eléctrico", i: ["El generador de impulsos", "El control de intensidad", "La pantalla del equipo"] },
-      { q: "¿Cuál es la función del control de intensidad?", a: "Ajustar la amplitud del estímulo", i: ["Generar la forma de onda", "Aislar eléctricamente al paciente", "Analizar la zona anatómica"] },
-      { q: "¿Qué regula el control de intensidad?", a: "Los miliamperios suministrados al paciente", i: ["La frecuencia de la red eléctrica", "La distancia entre electrodos", "El color del equipo"] },
-      { q: "¿Qué es la electroterapia?", a: "Una técnica de rehabilitación basada en la aplicación controlada de corrientes eléctricas", i: ["Una técnica basada en ultrasonidos", "Un método para medir a la persona", "Un tratamiento farmacológico"] },
-      { q: "¿Qué objetivos terapéuticos tiene la electroterapia?", a: "Analgesia, estimulación muscular y mejora de la circulación", i: ["Solo diagnóstico por imagen", "Solo aumento de la temperatura", "Solo reparación de huesos"] },
-      { q: "¿Qué diferencia existe entre estimulación sensitiva y motora?", a: "La sensitiva busca analgesia sin contracción muscular y la motora provoca contracciones", i: ["La sensitiva siempre provoca dolor", "La sensitiva no usa corriente", "La motora no genera movimiento"] },
-      { q: "¿Qué equipo es típico de la estimulación sensitiva?", a: "TENS", i: ["EMS", "Rayos X", "Ultrasonido"] },
-      { q: "¿Qué equipo es típico de la estimulación motora?", a: "EMS", i: ["TENS", "Ecógrafo", "Báscula"] },
-      { q: "¿Qué tipo de corriente utiliza la iontoforesis?", a: "Corriente continua", i: ["Corriente alterna", "Corriente modulada en ráfagas", "Corriente de radio"] },
-      { q: "¿Qué finalidad tiene el TENS?", a: "La analgesia", i: ["Transportar medicamentos", "Fortalecer musculatura", "Diagnosticar fracturas"] },
-      { q: "¿Qué es una onda bifásica simétrica?", a: "Una onda bipolar con forma simétrica", i: ["Una corriente continua", "Una onda sin polaridad", "Una señal acústica"] },
-      { q: "¿Qué se utiliza para transportar la corriente al paciente?", a: "Los electrodos", i: ["Las baterías del móvil", "La pantalla del equipo", "El motor del aparato"] },
-      { q: "¿Qué riesgos pueden producirse durante la electroestimulación?", a: "Quemaduras, irritación cutánea y colocación incorrecta de electrodos", i: ["Solo pérdida de batería", "Solo problema de pantalla", "Solo ruido del equipo"] },
-      { q: "¿Qué es la frecuencia portadora en corrientes rusas?", a: "La frecuencia base generada por el equipo", i: ["El tiempo total del tratamiento", "La intensidad máxima del paciente", "El color del electrodo"] },
-      { q: "¿Qué diferencia existe entre corrientes rusas e interferenciales?", a: "Las rusas moduladas en ráfagas y las interferenciales por interferencia de dos corrientes", i: ["Las rusas son solo de diagnóstico", "Las interferenciales nunca se usan en rehabilitación", "Las rusas usan solo ultrasonido"] },
-      { q: "¿Qué es el ánodo?", a: "El electrodo positivo", i: ["El electrodo negativo", "El cable de alimentación", "La pantalla"] },
-      { q: "¿Qué es el cátodo?", a: "El electrodo negativo", i: ["El electrodo positivo", "El temporizador", "El potenciómetro"] },
-      { q: "¿Qué debe hacerse con los electrodos deteriorados?", a: "Sustituirlos", i: ["Mantenerlos sin revisar", "Aumentar la intensidad", "Olvidarlos"] },
-      { q: "¿Qué debe comprobarse durante el mantenimiento preventivo?", a: "Los parámetros de salida y el funcionamiento del equipo", i: ["Solo el peso del equipo", "Solo el color de la carcasa", "La temperatura ambiente"] },
-      { q: "¿Cuál es una contraindicación general para la electroestimulación?", a: "Marcapasos o desfibrilador implantado", i: ["Piel sana", "Uso de electrodos en zonas permitidas", "Rehabilitación muscular"] },
-      { q: "¿Qué parámetro determina la frecuencia de las contracciones musculares en corrientes rusas?", a: "La frecuencia de modulación", i: ["El tiempo total de tratamiento", "La temperatura del paciente", "La longitud del cable"] }
+      {
+        q: '¿Cuál es la función de la fuente de alimentación en un sistema de rehabilitación?',
+        options: [
+          'Suministrar la energía necesaria para el funcionamiento del equipo',
+          'Generar directamente la corriente terapéutica',
+          'Medir la frecuencia cardíaca del paciente'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Cuál es la función principal del microcontrolador?',
+        options: [
+          'Gobernar el funcionamiento del equipo',
+          'Producir la corriente terapéutica',
+          'Actuar como electrodo'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué función tiene el generador de impulsos?',
+        options: [
+          'Producir la señal eléctrica que después se aplicará al paciente',
+          'Amplificar la señal hasta su nivel final',
+          'Controlar la temperatura del paciente'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Cuál es la función de la etapa de potencia?',
+        options: [
+          'Amplificar la señal para aplicarla al paciente',
+          'Mostrar los menús al usuario',
+          'Medir la presión arterial'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué protege al paciente frente a riesgos eléctricos?',
+        options: [
+          'El sistema de aislamiento eléctrico',
+          'El electrodo',
+          'La pantalla' 
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué significa TENS?',
+        options: [
+          'Estimulación Nerviosa Eléctrica Transcutánea',
+          'Tratamiento Eléctrico Neuromuscular Superficial',
+          'Terapia Eléctrica de Nervios Segmentarios'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué finalidad tiene el TENS?',
+        options: [
+          'Disminuir la percepción del dolor',
+          'Medir la glucosa',
+          'Diagnosticar fracturas'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué equipo se usa principalmente para estimulación muscular?',
+        options: [
+          'EMS o electroestimulador muscular',
+          'Osciloscopio',
+          'Multímetro'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué tipo de corriente utiliza la iontoforesis?',
+        options: [
+          'Corriente continua',
+          'Corriente alterna',
+          'Corriente de alta frecuencia'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué es la finalidad de la iontoforesis?',
+        options: [
+          'Transportar medicamentos a través de la piel',
+          'Generar calor corporal',
+          'Medir la presión arterial'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué función tienen las corrientes rusas?',
+        options: [
+          'Estimular nervios motores y provocar contracciones',
+          'Detectar enfermedades cardiacas',
+          'Generar rayos X'
+        ],
+        correcta: 0
+      },
+      {
+        q: '¿Qué pasa con la intensidad si se aumenta mucho en electroestimulación?',
+        options: [
+          'Puede producir irritación o quemaduras',
+          'Se evita cualquier efecto',
+          'Baja automáticamente la frecuencia cardíaca'
+        ],
+        correcta: 0
+      }
     ];
 
-    function mezclar(array) {
+    function shuffle(array) {
       const copia = [...array];
       for (let i = copia.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -391,253 +334,167 @@
     }
 
     function formatearTiempo(segundos) {
-      const mins = Math.floor(segundos / 60);
-      const secs = segundos % 60;
-      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      const m = String(Math.floor(segundos / 60)).padStart(2, '0');
+      const s = String(segundos % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function actualizarBarra() {
+      const porcentaje = ((indiceActual + 1) / preguntasJuego.length) * 100;
+      barraGlobalEl.style.width = `${porcentaje}%`;
     }
 
     function actualizarContador() {
-      contadorEl.textContent = `${respondidas} / ${juego.length}`;
+      contadorEl.textContent = `${Math.min(indiceActual, preguntasJuego.length)} / ${preguntasJuego.length}`;
     }
 
-    function actualizarBarraGlobal() {
-      const porcentaje = (ok / Math.max(1, juego.length)) * 100;
-      barraGlobal.style.width = `${porcentaje}%`;
+    function actualizarRacha() {
+      rachaEl.textContent = racha > 0 ? `Racha: ${racha}` : '';
     }
 
-    function renderProgress() {
-      progressEl.innerHTML = "";
-      for (let i = 0; i < POR_PARTIDA; i++) {
-        const sq = document.createElement("div");
-        sq.className = "square";
-        if (i < respondidas) {
-          sq.classList.add(juego[i] && juego[i].acierto === true ? "ok" : "ko");
+    function mostrarPantallaInicio() {
+      app.innerHTML = `
+        <div class="card result-box">
+          <div style="margin-bottom: 12px; font-weight: bold;">Introduce tu nombre</div>
+          <div class="nombre-box">
+            <input id="nombreJugador" type="text" maxlength="18" value="${jugador}" placeholder="Tu nombre" />
+            <button id="btnIniciar">Empezar</button>
+          </div>
+        </div>
+      `;
+
+      const input = document.getElementById('nombreJugador');
+      const btn = document.getElementById('btnIniciar');
+      btn.addEventListener('click', () => {
+        const nombre = input.value.trim();
+        if (!nombre) {
+          input.focus();
+          return;
         }
-        progressEl.appendChild(sq);
-      }
+        jugador = nombre;
+        localStorage.setItem('jugador', jugador);
+        iniciarPartida();
+      });
+
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          btn.click();
+        }
+      });
     }
 
-    function empezarTiempo() {
-      clearInterval(intervalo);
-      intervalo = setInterval(() => {
-        tiempo--;
-        timerEl.textContent = formatearTiempo(tiempo);
+    function iniciarPartida() {
+      preguntasJuego = shuffle(preguntas).slice(0, MAX_PREGUNTAS);
+      indiceActual = 0;
+      aciertos = 0;
+      tiempoRestante = TOTAL_SEGUNDOS;
+      racha = 0;
+      timerEl.textContent = formatearTiempo(tiempoRestante);
+      contadorEl.textContent = `0 / ${preguntasJuego.length}`;
+      barraGlobalEl.style.width = '0%';
+      actualizarRacha();
+      mostrarPregunta();
+      iniciarTemporizador();
+    }
 
-        if (tiempo <= 0) {
-          clearInterval(intervalo);
-          finJuego();
+    function iniciarTemporizador() {
+      clearInterval(timerId);
+      timerId = setInterval(() => {
+        tiempoRestante--;
+        timerEl.textContent = formatearTiempo(tiempoRestante);
+
+        if (tiempoRestante <= 0) {
+          clearInterval(timerId);
+          finalizarPartida();
         }
       }, 1000);
     }
 
     function mostrarPregunta() {
-      if (i >= juego.length) {
-        finJuego();
+      const pregunta = preguntasJuego[indiceActual];
+      if (!pregunta) {
+        finalizarPartida();
         return;
       }
 
-      const pregunta = juego[i];
-      const opciones = mezclar([pregunta.a, ...pregunta.i]);
+      contadorEl.textContent = `${indiceActual} / ${preguntasJuego.length}`;
+      barraGlobalEl.style.width = `${((indiceActual) / preguntasJuego.length) * 100}%`;
 
       app.innerHTML = `
         <div class="card">
-          <h3>${i + 1}. ${pregunta.q}</h3>
-          ${opciones.map((opcion) => `
-            <button data-opcion="${opcion}">${opcion}</button>
-          `).join("")}
+          <div class="pregunta-meta">Pregunta ${indiceActual + 1} de ${preguntasJuego.length}</div>
+          <h2 class="pregunta">${pregunta.q}</h2>
+          <div class="opciones">
+            ${pregunta.options.map((opcion, index) => `
+              <button class="respuesta-btn" data-index="${index}">${opcion}</button>
+            `).join('')}
+          </div>
         </div>
       `;
 
-      app.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => responder(btn.dataset.opcion));
+      document.querySelectorAll('.respuesta-btn').forEach((btn) => {
+        btn.addEventListener('click', () => responder(Number(btn.dataset.index)));
       });
-
-      actualizarContador();
-      renderProgress();
     }
 
-    function responder(opcion) {
-      const pregunta = juego[i];
-      const botones = app.querySelectorAll("button");
-      const acierto = opcion === pregunta.a;
+    function responder(indexSeleccionado) {
+      const pregunta = preguntasJuego[indiceActual];
+      const botones = document.querySelectorAll('.respuesta-btn');
 
       botones.forEach((btn) => {
         btn.disabled = true;
-        if (btn.dataset.opcion === pregunta.a) btn.classList.add("correct");
-        if (btn.dataset.opcion === opcion && !acierto) btn.classList.add("incorrect");
+        const valor = Number(btn.dataset.index);
+
+        if (valor === pregunta.correcta) {
+          btn.classList.add('correct');
+        }
+
+        if (valor === indexSeleccionado && valor !== pregunta.correcta) {
+          btn.classList.add('incorrect');
+        }
       });
 
-      juego[i].acierto = acierto;
-
-      if (acierto) {
-        ok++;
+      if (indexSeleccionado === pregunta.correcta) {
+        aciertos++;
         racha++;
-        rachaEl.textContent = "¡Racha! " + "⭐".repeat(Math.min(racha, 5));
       } else {
         racha = 0;
-        rachaEl.textContent = "Sigue intentándolo";
       }
 
-      respondidas = Math.min(i + 1, juego.length);
-      actualizarContador();
-      actualizarBarraGlobal();
-      renderProgress();
+      actualizarRacha();
 
       setTimeout(() => {
-        i++;
-        if (i < juego.length) {
+        indiceActual++;
+
+        if (indiceActual < preguntasJuego.length) {
           mostrarPregunta();
         } else {
-          finJuego();
+          finalizarPartida();
         }
-      }, 800);
+      }, 900);
     }
 
-    async function guardarPuntuacion(nombre, puntos, porcentaje) {
-      try {
-        const ref = db.ref("puntuaciones");
-        await ref.push({
-          nombre: nombre,
-          puntuacion: puntos,
-          porcentaje: porcentaje,
-          fecha: new Date().toISOString()
-        });
-        console.log("✅ Puntuación guardada");
-      } catch (error) {
-        console.error("❌ Error:", error);
-      }
-    }
-
-    async function cargarLeaderboard() {
-      try {
-        const ref = db.ref("puntuaciones");
-        const snapshot = await ref.orderByChild("puntuacion").limitToLast(100).once("value");
-        
-        let puntuaciones = [];
-        snapshot.forEach((child) => {
-          puntuaciones.push(child.val());
-        });
-
-        puntuaciones.sort((a, b) => b.puntuacion - a.puntuacion);
-        puntuaciones = puntuaciones.slice(0, 10);
-
-        let html = "<h3>🏆 Top 10 Global</h3>";
-
-        if (puntuaciones.length === 0) {
-          html += "<p class='loading'>Sé el primero en competir</p>";
-          return html;
-        }
-
-        puntuaciones.forEach((data, index) => {
-          const rank = index + 1;
-          const rankClass = rank === 1 ? "top1" : rank === 2 ? "top2" : rank === 3 ? "top3" : "";
-          const emoji = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}º`;
-          html += `
-            <div class="leaderboard-row">
-              <div class="rank ${rankClass}">${emoji}</div>
-              <div class="name">${data.nombre || "Anónimo"}</div>
-              <div class="score">${data.puntuacion}/${POR_PARTIDA}</div>
-            </div>
-          `;
-        });
-        return html;
-      } catch (error) {
-        console.error("❌ Error:", error);
-        return "<p class='loading'>⚠️ Error cargando ranking</p>";
-      }
-    }
-
-    async function finJuego() {
-      clearInterval(intervalo);
-      const score = Math.round((ok / juego.length) * 100);
-      const mensaje = score >= 70 ? "¡Muy bien! 🎉" : score >= 50 ? "Buen intento 👍" : "Sigue practicando 💪";
-      const tiempoUsado = formatearTiempo(TIEMPO_TOTAL - tiempo);
-
-      await guardarPuntuacion(jugador, ok, score);
-      const leaderboardHtml = await cargarLeaderboard();
+    function finalizarPartida() {
+      clearInterval(timerId);
+      const nota = Math.round((aciertos / preguntasJuego.length) * 100);
 
       app.innerHTML = `
-        <div class="card resumen">
-          <h2>🎯 Fin de la partida</h2>
-          
-          <div class="stat-box">
-            <span>Jugador:</span>
-            <strong>${jugador}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Respuestas correctas:</span>
-            <strong>${ok} / ${juego.length}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Porcentaje:</span>
-            <strong>${score}%</strong>
-          </div>
-          <div class="stat-box">
-            <span>Tiempo usado:</span>
-            <strong>${tiempoUsado}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Resultado:</span>
-            <strong>${mensaje}</strong>
-          </div>
-          
-          <div class="leaderboard-container">
-            <div class="leaderboard">
-              ${leaderboardHtml}
-            </div>
-            <div class="leaderboard">
-              <h3>📊 Tu Desempeño</h3>
-              <div class="leaderboard-row" style="grid-column: 1/-1; background: #fef3c7; border-radius: 8px; border-bottom: none;">
-                <div style="grid-column: 1/-1; padding: 10px;">
-                  <strong style="color: #b45309;">${jugador}</strong><br>
-                  Puntuación: <strong>${ok}/${juego.length}</strong><br>
-                  Porcentaje: <strong>${score}%</strong><br>
-                  <small style="color: #92400e;">Tiempo: ${tiempoUsado}</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="button-group">
-            <button id="resetBtn">🎮 Jugar otra vez</button>
-            <button id="cambiarNombreBtn">👤 Otro jugador</button>
-          </div>
+        <div class="card result-box">
+          <div>Jugador: <strong>${jugador}</strong></div>
+          <div class="resultado-final">${aciertos}/${preguntasJuego.length}</div>
+          <div style="font-size: 20px; margin-bottom: 16px;">Nota: ${nota}%</div>
+          <button id="btnReiniciar">Jugar otra vez</button>
         </div>
       `;
 
-      document.getElementById("resetBtn").addEventListener("click", iniciarPartida);
-      document.getElementById("cambiarNombreBtn").addEventListener("click", () => {
-        const nuevoNombre = prompt("¿Cuál es tu nombre?", jugador);
-        if (nuevoNombre && nuevoNombre.trim()) {
-          jugador = nuevoNombre.trim();
-          localStorage.setItem("jugador", jugador);
-          iniciarPartida();
-        }
-      });
-
-      rachaEl.textContent = "";
+      document.getElementById('btnReiniciar').addEventListener('click', mostrarPantallaInicio);
+      contadorEl.textContent = `${preguntasJuego.length} / ${preguntasJuego.length}`;
+      barraGlobalEl.style.width = '100%';
+      timerEl.textContent = formatearTiempo(tiempoRestante);
+      rachaEl.textContent = `Racha final: ${racha}`;
     }
 
-    function iniciarPartida() {
-      juego = mezclar(preguntas).slice(0, POR_PARTIDA);
-      i = 0;
-      ok = 0;
-      respondidas = 0;
-      tiempo = TIEMPO_TOTAL;
-      racha = 0;
-      timerEl.textContent = formatearTiempo(tiempo);
-      barraGlobal.style.width = "0%";
-      rachaEl.textContent = "";
-      empezarTiempo();
-      mostrarPregunta();
-    }
-
-    const nombreIngresado = prompt("¿Cuál es tu nombre?", jugador);
-    if (nombreIngresado && nombreIngresado.trim()) {
-      jugador = nombreIngresado.trim();
-    }
-    localStorage.setItem("jugador", jugador);
-    iniciarPartida();
+    mostrarPantallaInicio();
   </script>
 </body>
 </html>
