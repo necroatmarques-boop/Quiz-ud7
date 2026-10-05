@@ -287,7 +287,6 @@ const preguntas = [
 {q:"¿Qué comprobación puede realizarse sobre la etapa de potencia?",a:"Medir la salida",i:["Medir la distancia entre electrodos","Comprobar el nombre del tratamiento"]},
 {q:"¿Qué puede comprobarse mediante la verificación de canales?",a:"Que los canales de salida funcionan correctamente",i:["Que la batería tenga el tamaño adecuado","Que el paciente tenga la piel seca"]},
 {q:"¿Qué ocurriría sin una etapa de potencia?",a:"Existiría señal, pero sería demasiado débil para producir estimulación terapéutica",i:["No existiría ningún parámetro programable","El microcontrolador dejaría de recibir alimentación"]},
-
 {q:"¿Cuál es la función del sistema de aislamiento eléctrico?",a:"Proteger al paciente frente a riesgos eléctricos",i:["Generar la señal terapéutica","Controlar los menús del equipo"]},
 {q:"¿Qué riesgo pretende evitar principalmente el aislamiento eléctrico?",a:"Que corrientes peligrosas alcancen al paciente",i:["Que la batería se descargue rápidamente","Que el microcontrolador procese datos"]},
 {q:"¿Qué elemento puede utilizarse para conseguir aislamiento eléctrico?",a:"Un transformador de aislamiento",i:["Un potenciómetro","Un osciloscopio"]},
@@ -297,7 +296,6 @@ const preguntas = [
 {q:"¿Qué avería puede aparecer en el sistema de aislamiento eléctrico?",a:"Un incremento de las corrientes de fuga",i:["Una disminución del tamaño del electrodo","Un bloqueo del menú"]},
 {q:"¿Qué instrumento puede utilizarse para comprobar la seguridad eléctrica?",a:"Un analizador de seguridad eléctrica",i:["Un encoder","Un generador de impulsos"]},
 {q:"¿Qué debe comprobarse específicamente en el sistema de aislamiento?",a:"Las corrientes de fuga",i:["El número de menús disponibles","El tamaño de la pantalla"]},
-
 {q:"¿Cuál es la función del control de intensidad?",a:"Ajustar la amplitud del estímulo",i:["Generar la forma de onda","Aislar eléctricamente al paciente"]},
 {q:"¿Qué regula el control de intensidad?",a:"Los miliamperios suministrados al paciente",i:["La frecuencia de la red eléctrica","La distancia entre electrodos"]},
 {q:"¿Qué intensidad produciría, según el ejemplo de los apuntes, una estimulación suave?",a:"5 mA",i:["25 mA","100 mA"]},
@@ -309,7 +307,6 @@ const preguntas = [
 {q:"¿Qué debe comprobarse para verificar el control de intensidad?",a:"La corriente realmente entregada al paciente",i:["El color de la pantalla","La longitud del cable de alimentación"]},
 {q:"¿Qué otra comprobación es importante en el control de intensidad?",a:"Verificar que la pantalla coincide con la salida real",i:["Comprobar que todos los electrodos sean iguales","Medir únicamente la tensión de entrada"]},
 {q:"¿Por qué es especialmente importante la intensidad del estímulo?",a:"Porque es el parámetro que el paciente percibe de forma más inmediata",i:["Porque determina el tamaño de la pantalla","Porque controla exclusivamente la batería"]},
-
 {q:"¿Cuál es la función del paciente o carga biológica?",a:"Actuar como receptor final de la corriente terapéutica",i:["Generar los impulsos eléctricos","Controlar el microcontrolador"]},
 {q:"¿Cómo se comporta técnicamente el cuerpo humano ante la corriente eléctrica?",a:"Como una resistencia variable y una impedancia eléctrica",i:["Como una fuente de alimentación ideal","Como un generador de impulsos"]},
 {q:"¿Qué característica del paciente influye en la corriente suministrada?",a:"El estado de la piel",i:["El modelo del microcontrolador","La programación del menú"]},
@@ -319,14 +316,12 @@ const preguntas = [
 {q:"¿Por qué puede variar la corriente suministrada entre distintos pacientes?",a:"Porque el cuerpo humano presenta una impedancia eléctrica variable",i:["Porque el generador cambia siempre de frecuencia","Porque la etapa de potencia elimina los parámetros programados"]},
 {q:"¿Qué factores pueden hacer variar la corriente aplicada durante un tratamiento?",a:"El paciente, la zona anatómica y el estado de los tejidos",i:["Solo el color de los electrodos","Únicamente el tiempo de tratamiento"]},
 {q:"¿Qué relación existe entre la zona anatómica y la corriente suministrada?",a:"La zona anatómica puede modificar la respuesta eléctrica del paciente",i:["La zona anatómica determina siempre la frecuencia","La zona anatómica no influye nunca en la corriente"]},
-
 {q:"¿Cuál es la secuencia general de funcionamiento de estos bloques?",a:"Fuente de alimentación → microcontrolador → generador de impulsos → etapa de potencia → paciente",i:["Paciente → microcontrolador → fuente → generador → etapa de potencia","Generador → paciente → fuente → microcontrolador → aislamiento"]},
 {q:"¿Qué bloque recibe las órdenes del usuario y gobierna el equipo?",a:"El microcontrolador",i:["La etapa de potencia","El paciente"]},
 {q:"¿Qué bloque crea la señal eléctrica terapéutica antes de amplificarla?",a:"El generador de impulsos",i:["El control de intensidad","La fuente de alimentación"]},
 {q:"¿Qué bloque proporciona la energía suficiente para aplicar la señal al paciente?",a:"La etapa de potencia",i:["El microcontrolador","El sistema de aislamiento"]},
 {q:"¿Qué bloque tiene como prioridad proteger al paciente frente a riesgos eléctricos?",a:"El sistema de aislamiento eléctrico",i:["El generador de impulsos","El control de intensidad"]},
 {q:"¿Qué bloque permite regular los miliamperios aplicados al paciente?",a:"El control de intensidad",i:["El microcontrolador exclusivamente","El sistema de aislamiento"]},
-
 {q:"¿Qué equipos son habituales en una unidad de rehabilitación?",a:"TENS, EMS, corrientes interferenciales, corrientes rusas y equipos de iontoforesis",i:["Solo equipos de rayos X","Solo ecógrafos","Solo equipos quirúrgicos"]},
 {q:"¿Qué significa TENS?",a:"Estimulación Nerviosa Eléctrica Transcutánea",i:["Estimulación Neuromuscular Eléctrica Superficial","Tratamiento Eléctrico Nervioso Sistémico","Terapia Eléctrica Neuromuscular Profunda"]},
 {q:"¿Para qué se utilizan principalmente los equipos TENS?",a:"Para producir estimulación sensitiva y analgesia",i:["Para realizar radiografías","Para medir la presión arterial","Para producir únicamente contracciones musculares"]},
@@ -335,13 +330,9 @@ const preguntas = [
 {q:"¿Qué aspectos debemos conocer de un equipo de electroterapia?",a:"Principio de funcionamiento, generación de corriente, tipos de ondas, electrodos, parámetros y seguridad",i:["Solo el precio del equipo","Solo el color y tamaño del equipo","Solo la marca del fabricante"]},
 {q:"¿Qué parámetros de tratamiento debemos conocer en electroterapia?",a:"Frecuencia, intensidad y duración",i:["Peso, altura y temperatura","Presión, volumen y masa","Velocidad, peso y longitud"]},
 {q:"¿Qué es la electroterapia?",a:"Una técnica de rehabilitación basada en la aplicación controlada de corrientes eléctricas",i:["Una técnica basada únicamente en ultrasonidos","Un método de diagnóstico mediante rayos X","Una técnica basada únicamente en calor"]},
-
 {q:"¿Qué características pueden variar en las corrientes utilizadas en electroterapia?",a:"Intensidad, frecuencia, forma de onda y duración",i:["Solo el color y la temperatura","Solo la tensión de alimentación","Solo el tamaño de los electrodos"]},
-
 {q:"¿Cuál es uno de los principales objetivos terapéuticos de la electroterapia?",a:"Analgesia",i:["Realizar radiografías","Medir la glucosa","Eliminar completamente la movilidad muscular"]},
-
 {q:"¿Qué otros objetivos terapéuticos tiene la electroterapia?",a:"Estimulación muscular, reeducación neuromuscular, mejora de la circulación y reducción del edema",i:["Solo aumentar la temperatura corporal","Solo medir la frecuencia cardíaca","Solo realizar diagnósticos por imagen"]},
-
 {q:"¿Qué diferencia existe entre estimulación sensitiva y motora?",a:"La sensitiva busca efectos analgésicos sin contracción muscular y la motora provoca contracciones musculares controladas",i:["Ambas producen siempre la misma contracción","La sensitiva siempre produce contracciones intensas","La motora no activa fibras nerviosas"]},
 
 {q:"¿Qué tipo de fibras se activan en la estimulación sensitiva?",a:"Fibras nerviosas sensitivas",i:["Fibras musculares exclusivamente","Fibras motoras exclusivamente","Células óseas"]},
