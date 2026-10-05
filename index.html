@@ -1,1228 +1,329 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz Examen 1 Rehabilitacion</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Examen 1 Rehabilitación</title>
+  <style>
+    * { box-sizing: border-box; }
 
-<style>
-body { font-family: Arial; background:#f2f2f2; padding:15px; }
-h1 { text-align:center; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 15px;
+      margin: 0;
+    }
 
-#topbar{display:flex;gap:10px;margin-bottom:15px;}
-#progress{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;flex:1;}
-.square{height:12px;border-radius:3px;background:#ccc;}
-.square.ok{background:#28a745;}
-.square.ko{background:#dc3545;}
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
 
-#timer{font-weight:bold;}
-#contador{font-size:14px;font-weight:bold;text-align:right;}
+    #topbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: center;
+    }
 
-.card{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;}
+    #progress {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
 
-button{
-width:100%;padding:12px;margin-top:8px;
-font-size:16px;border:none;border-radius:8px;
-background:#007aff;color:white;cursor:pointer;
-}
+    .square {
+      height: 12px;
+      border-radius: 3px;
+      background: #ccc;
+    }
 
-button.correct{background:#28a745 !important;}
-button.incorrect{background:#dc3545 !important;}
+    .square.ok { background: #28a745; }
+    .square.ko { background: #dc3545; }
 
-.drag{background:#007aff;color:white;padding:8px;margin:5px;border-radius:5px;display:inline-block;cursor:grab;}
-.drop{border:2px dashed #999;padding:10px;margin:5px;min-height:40px;border-radius:5px;}
+    #timer {
+      font-weight: bold;
+      min-width: 70px;
+      text-align: right;
+    }
 
-.racha{text-align:center;font-size:20px;margin-bottom:10px;}
-</style>
+    #contador {
+      font-size: 14px;
+      font-weight: bold;
+      text-align: right;
+      min-width: 90px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #007aff;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+    }
+
+    button.correct { background: #28a745 !important; }
+    button.incorrect { background: #dc3545 !important; }
+    button:disabled { cursor: default; opacity: 0.95; }
+
+    .racha {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+      min-height: 28px;
+      font-weight: bold;
+    }
+
+    .resumen {
+      text-align: center;
+      padding: 20px 10px;
+    }
+  </style>
 </head>
-
 <body>
+  <h1>Dios nos pille confesados</h1>
 
-<h1>Dios nos pille confesados</h1>
-
-<div style="margin-bottom:10px;">
-  <div style="height:10px;background:#ddd;border-radius:5px;overflow:hidden;">
-    <div id="barraGlobal" style="height:100%;width:0%;background:#007aff;"></div>
+  <div style="margin-bottom:10px;">
+    <div style="height:10px;background:#ddd;border-radius:5px;overflow:hidden;">
+      <div id="barraGlobal" style="height:100%;width:0%;background:#007aff;"></div>
+    </div>
   </div>
-</div>
 
-<div id="topbar">
-  <div id="progress"></div>
-
-  <div style="display:flex;flex-direction:column;align-items:flex-end;">
-    <div id="contador">0 / 0</div>
-    <div id="timer">20:00</div>
+  <div id="topbar">
+    <div id="progress"></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;">
+      <div id="contador">0 / 0</div>
+      <div id="timer">20:00</div>
+    </div>
   </div>
-</div>
 
-<div id="racha" class="racha"></div>
-<div id="app"></div>
-
-<script>
-
-const app = document.getElementById("app");
-
-const POR_PARTIDA = 20;
-const TIEMPO_TOTAL = 1200;
-
-let juego=[],i=0,ok=0,tiempo=TIEMPO_TOTAL,intervalo,racha=0;
-
-let respondidas = 0;
-let pool = [];
-let indiceGlobal = 0;
-let jugador = localStorage.getItem("jugador") || "";
-
-// 👉 PEGA AQUÍ TUS PREGUNTAS
-const preguntas = [
-
-{q:"¿Cuál es la función de la fuente de alimentación en un sistema de rehabilitación?",a:"Suministrar la energía necesaria para el funcionamiento de todo el equipo",i:["Generar directamente la corriente terapéutica","Controlar los parámetros del tratamiento"]},
-{q:"¿Cuál de estos elementos puede formar parte de una fuente de alimentación?",a:"Baterías",i:["Microcontroladores","Electrodos"]},
-{q:"¿Qué parámetro de la fuente de alimentación es importante conocer?",a:"La tensión de entrada y salida",i:["La frecuencia cardíaca del paciente","La distancia entre electrodos"]},
-{q:"¿Qué elemento permite almacenar energía para utilizarla posteriormente en el equipo?",a:"Una batería recargable",i:["Un optoacoplador","Un osciloscopio"]},
-{q:"¿Qué problema puede indicar una descarga rápida de la batería?",a:"Una posible avería en la fuente de alimentación o en la batería",i:["Un fallo del microcontrolador exclusivamente","Un exceso de tamaño del electrodo"]},
-{q:"¿Cuál es una comprobación básica de la fuente de alimentación?",a:"Medir la tensión con un multímetro",i:["Medir la frecuencia con un potenciómetro","Comprobar la forma de onda con un electrodo"]},
-{q:"¿Cuál de estos es un síntoma de avería de la fuente de alimentación?",a:"El equipo no enciende",i:["El paciente cambia de posición","El electrodo aumenta de tamaño"]},
-
-{q:"¿Cuál es la función principal del microcontrolador?",a:"Gobernar el funcionamiento del equipo",i:["Generar directamente la corriente terapéutica","Proteger físicamente al paciente de las corrientes de fuga"]},
-{q:"¿Qué parámetros puede controlar el microcontrolador?",a:"Intensidad, frecuencia, anchura de pulso y tiempo de tratamiento",i:["Solo la tensión de entrada","Únicamente la temperatura del paciente"]},
-{q:"¿Qué ocurre cuando el fisioterapeuta selecciona los parámetros de un tratamiento?",a:"El microcontrolador configura automáticamente esos parámetros",i:["La fuente de alimentación cambia físicamente los electrodos","El paciente configura directamente el generador"]},
-{q:"¿Qué debe hacer el microcontrolador con las órdenes del usuario?",a:"Recibirlas y procesar la información",i:["Convertirlas directamente en corriente de red","Eliminar las señales procedentes del generador"]},
-{q:"¿A qué bloque envía instrucciones el microcontrolador?",a:"Al generador de impulsos",i:["A la batería del paciente","Al analizador de seguridad eléctrica"]},
-{q:"¿Cuál de estas puede ser una avería del microcontrolador?",a:"Los menús no responden",i:["Una corriente de fuga en el paciente","Una batería físicamente descargada"]},
-{q:"¿Qué comprobación puede realizarse sobre el microcontrolador?",a:"Probar los botones",i:["Medir el tamaño de los electrodos","Medir directamente la resistencia de la piel"]},
-{q:"¿Cuál es una idea fundamental sobre el microcontrolador?",a:"No genera la corriente terapéutica, sino que gobierna el funcionamiento del equipo",i:["Genera toda la corriente terapéutica","Sustituye al sistema de aislamiento eléctrico"]},
-
-{q:"¿Cuál es la función del generador de impulsos?",a:"Producir la señal eléctrica que posteriormente se aplicará al paciente",i:["Amplificar la señal hasta su nivel final","Proteger al paciente de las corrientes de fuga"]},
-{q:"¿Qué tipo de señal puede generar un generador de impulsos?",a:"Ondas rectangulares",i:["Únicamente señales acústicas","Solo señales procedentes de la batería"]},
-{q:"¿Qué tipo de onda puede generar un equipo de rehabilitación?",a:"Ondas bifásicas",i:["Ondas exclusivamente mecánicas","Ondas producidas por el sistema de aislamiento"]},
-{q:"¿Cuál de estos es un parámetro generado por el generador de impulsos?",a:"La frecuencia",i:["El estado de humedad de la piel","El tamaño del electrodo"]},
-{q:"¿Qué otros parámetros genera el generador de impulsos?",a:"La anchura de pulso y la forma de onda",i:["La resistencia de la piel y la humedad","La tensión de red y el tamaño del paciente"]},
-{q:"¿Cuál puede ser una avería del generador de impulsos?",a:"Ausencia de señal",i:["Exceso de humedad en la piel","Fallo en el tamaño del electrodo"]},
-{q:"¿Qué instrumento permite comprobar la señal del generador de impulsos?",a:"Un osciloscopio",i:["Un potenciómetro","Un transformador de aislamiento"]},
-{q:"¿Qué instrumento especializado puede utilizarse para comprobar el generador?",a:"Un analizador de electroterapia",i:["Un encoder","Un optoacoplador"]},
-{q:"¿Por qué la señal del generador todavía no es suficiente para estimular al paciente?",a:"Porque todavía no tiene suficiente energía",i:["Porque todavía no tiene frecuencia","Porque no puede producir ninguna forma de onda"]},
-
-{q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal generada para que pueda aplicarse al paciente",i:["Crear las órdenes del usuario","Medir el estado de la piel"]},
-{q:"¿Por qué es necesaria la etapa de potencia?",a:"Porque la señal del generador es demasiado pequeña para producir por sí sola la estimulación terapéutica",i:["Porque el microcontrolador no puede recibir órdenes","Porque elimina la necesidad de electrodos"]},
-{q:"¿Qué puede amplificar la etapa de potencia?",a:"La tensión y la corriente",i:["La humedad y la distancia entre electrodos","El tamaño y el peso del paciente"]},
-{q:"¿Qué debe mantener la etapa de potencia?",a:"Los parámetros programados",i:["El estado de la piel","La temperatura ambiente"]},
-{q:"¿Cuál de estos es un componente típico de una etapa de potencia?",a:"Un MOSFET",i:["Un electrodo","Un osciloscopio"]},
-{q:"¿Cuál puede ser una avería de la etapa de potencia?",a:"Intensidad insuficiente",i:["Un menú que no responde","Una humedad excesiva de la piel"]},
-{q:"¿Qué otra avería puede producirse en la etapa de potencia?",a:"Un canal que no funciona",i:["Una frecuencia cardíaca incorrecta","Un electrodo demasiado húmedo"]},
-{q:"¿Qué comprobación puede realizarse sobre la etapa de potencia?",a:"Medir la salida",i:["Medir la distancia entre electrodos","Comprobar el nombre del tratamiento"]},
-{q:"¿Qué puede comprobarse mediante la verificación de canales?",a:"Que los canales de salida funcionan correctamente",i:["Que la batería tenga el tamaño adecuado","Que el paciente tenga la piel seca"]},
-{q:"¿Qué ocurriría sin una etapa de potencia?",a:"Existiría señal, pero sería demasiado débil para producir estimulación terapéutica",i:["No existiría ningún parámetro programable","El microcontrolador dejaría de recibir alimentación"]},
-
-{q:"¿Cuál es la función del sistema de aislamiento eléctrico?",a:"Proteger al paciente frente a riesgos eléctricos",i:["Generar la señal terapéutica","Controlar los menús del equipo"]},
-{q:"¿Qué riesgo pretende evitar principalmente el aislamiento eléctrico?",a:"Que corrientes peligrosas alcancen al paciente",i:["Que la batería se descargue rápidamente","Que el microcontrolador procese datos"]},
-{q:"¿Qué elemento puede utilizarse para conseguir aislamiento eléctrico?",a:"Un transformador de aislamiento",i:["Un potenciómetro","Un osciloscopio"]},
-{q:"¿Cuál de estos elementos también puede formar parte del sistema de aislamiento?",a:"Un optoacoplador",i:["Un electrodo terapéutico","Una batería no recargable"]},
-{q:"¿Qué tipo de riesgo ayuda a evitar el aislamiento eléctrico?",a:"El microchoque",i:["La pérdida de frecuencia","La descarga de la batería"]},
-{q:"¿Qué otro riesgo eléctrico debe evitar el sistema de aislamiento?",a:"El macrochoque",i:["La pérdida de intensidad","El error de programación"]},
-{q:"¿Qué avería puede aparecer en el sistema de aislamiento eléctrico?",a:"Un incremento de las corrientes de fuga",i:["Una disminución del tamaño del electrodo","Un bloqueo del menú"]},
-{q:"¿Qué instrumento puede utilizarse para comprobar la seguridad eléctrica?",a:"Un analizador de seguridad eléctrica",i:["Un encoder","Un generador de impulsos"]},
-{q:"¿Qué debe comprobarse específicamente en el sistema de aislamiento?",a:"Las corrientes de fuga",i:["El número de menús disponibles","El tamaño de la pantalla"]},
-
-{q:"¿Cuál es la función del control de intensidad?",a:"Ajustar la amplitud del estímulo",i:["Generar la forma de onda","Aislar eléctricamente al paciente"]},
-{q:"¿Qué regula el control de intensidad?",a:"Los miliamperios suministrados al paciente",i:["La frecuencia de la red eléctrica","La distancia entre electrodos"]},
-{q:"¿Qué intensidad produciría, según el ejemplo de los apuntes, una estimulación suave?",a:"5 mA",i:["25 mA","100 mA"]},
-{q:"¿Qué intensidad produciría, según el ejemplo de los apuntes, una estimulación intensa?",a:"25 mA",i:["5 mA","1 mA"]},
-{q:"¿Cuál de estos elementos puede utilizarse para controlar la intensidad?",a:"Un potenciómetro",i:["Un transformador de aislamiento","Un osciloscopio"]},
-{q:"¿Qué otro elemento puede utilizarse para controlar digitalmente la intensidad?",a:"Un encoder",i:["Un optoacoplador","Una batería"]},
-{q:"¿Cuál puede ser una avería del control de intensidad?",a:"La intensidad no varía",i:["La forma de onda desaparece del osciloscopio siempre","El sistema deja de estar aislado automáticamente"]},
-{q:"¿Qué otro problema puede aparecer en el control de intensidad?",a:"Saltos bruscos de intensidad",i:["Aumento del tamaño del electrodo","Cambio automático de la zona anatómica"]},
-{q:"¿Qué debe comprobarse para verificar el control de intensidad?",a:"La corriente realmente entregada al paciente",i:["El color de la pantalla","La longitud del cable de alimentación"]},
-{q:"¿Qué otra comprobación es importante en el control de intensidad?",a:"Verificar que la pantalla coincide con la salida real",i:["Comprobar que todos los electrodos sean iguales","Medir únicamente la tensión de entrada"]},
-{q:"¿Por qué es especialmente importante la intensidad del estímulo?",a:"Porque es el parámetro que el paciente percibe de forma más inmediata",i:["Porque determina el tamaño de la pantalla","Porque controla exclusivamente la batería"]},
-
-{q:"¿Cuál es la función del paciente o carga biológica?",a:"Actuar como receptor final de la corriente terapéutica",i:["Generar los impulsos eléctricos","Controlar el microcontrolador"]},
-{q:"¿Cómo se comporta técnicamente el cuerpo humano ante la corriente eléctrica?",a:"Como una resistencia variable y una impedancia eléctrica",i:["Como una fuente de alimentación ideal","Como un generador de impulsos"]},
-{q:"¿Qué característica del paciente influye en la corriente suministrada?",a:"El estado de la piel",i:["El modelo del microcontrolador","La programación del menú"]},
-{q:"¿Qué factor relacionado con la piel puede modificar el comportamiento eléctrico?",a:"La humedad",i:["La frecuencia programada","La forma del generador"]},
-{q:"¿Qué característica de los electrodos influye en la corriente suministrada?",a:"Su tamaño",i:["El color de la pantalla","La capacidad del microcontrolador"]},
-{q:"¿Qué otro factor relacionado con los electrodos influye en la corriente?",a:"La distancia entre electrodos",i:["El tiempo de encendido de la pantalla","La tensión de entrada del adaptador"]},
-{q:"¿Por qué puede variar la corriente suministrada entre distintos pacientes?",a:"Porque el cuerpo humano presenta una impedancia eléctrica variable",i:["Porque el generador cambia siempre de frecuencia","Porque la etapa de potencia elimina los parámetros programados"]},
-{q:"¿Qué factores pueden hacer variar la corriente aplicada durante un tratamiento?",a:"El paciente, la zona anatómica y el estado de los tejidos",i:["Solo el color de los electrodos","Únicamente el tiempo de tratamiento"]},
-{q:"¿Qué relación existe entre la zona anatómica y la corriente suministrada?",a:"La zona anatómica puede modificar la respuesta eléctrica del paciente",i:["La zona anatómica determina siempre la frecuencia","La zona anatómica no influye nunca en la corriente"]},
-
-{q:"¿Cuál es la secuencia general de funcionamiento de estos bloques?",a:"Fuente de alimentación → microcontrolador → generador de impulsos → etapa de potencia → paciente",i:["Paciente → microcontrolador → fuente → generador → etapa de potencia","Generador → paciente → fuente → microcontrolador → aislamiento"]},
-{q:"¿Qué bloque recibe las órdenes del usuario y gobierna el equipo?",a:"El microcontrolador",i:["La etapa de potencia","El paciente"]},
-{q:"¿Qué bloque crea la señal eléctrica terapéutica antes de amplificarla?",a:"El generador de impulsos",i:["El control de intensidad","La fuente de alimentación"]},
-{q:"¿Qué bloque proporciona la energía suficiente para aplicar la señal al paciente?",a:"La etapa de potencia",i:["El microcontrolador","El sistema de aislamiento"]},
-{q:"¿Qué bloque tiene como prioridad proteger al paciente frente a riesgos eléctricos?",a:"El sistema de aislamiento eléctrico",i:["El generador de impulsos","El control de intensidad"]},
-{q:"¿Qué bloque permite regular los miliamperios aplicados al paciente?",a:"El control de intensidad",i:["El microcontrolador exclusivamente","El sistema de aislamiento"]}
-
-{q:"¿Qué equipos son habituales en una unidad de rehabilitación?",a:"TENS, EMS, corrientes interferenciales, corrientes rusas y equipos de iontoforesis",i:["Solo equipos de rayos X","Solo ecógrafos","Solo equipos quirúrgicos"]},
-
-{q:"¿Qué significa TENS?",a:"Estimulación Nerviosa Eléctrica Transcutánea",i:["Estimulación Neuromuscular Eléctrica Superficial","Tratamiento Eléctrico Nervioso Sistémico","Terapia Eléctrica Neuromuscular Profunda"]},
-
-{q:"¿Para qué se utilizan principalmente los equipos TENS?",a:"Para producir estimulación sensitiva y analgesia",i:["Para realizar radiografías","Para medir la presión arterial","Para producir únicamente contracciones musculares"]},
-
-{q:"¿Qué equipos se utilizan principalmente para la estimulación muscular?",a:"EMS o electroestimuladores musculares",i:["TENS exclusivamente","Equipos de iontoforesis","Osciloscopios"]},
-
-{q:"¿Qué tipos de corrientes se consideran habituales en rehabilitación?",a:"Interferenciales y rusas",i:["Únicamente corrientes continuas","Solo corrientes de alta tensión","Solo corrientes magnéticas"]},
-
-{q:"¿Qué aspectos debemos conocer de un equipo de electroterapia?",a:"Principio de funcionamiento, generación de corriente, tipos de ondas, electrodos, parámetros y seguridad",i:["Solo el precio del equipo","Solo el color y tamaño del equipo","Solo la marca del fabricante"]},
-
-{q:"¿Qué parámetros de tratamiento debemos conocer en electroterapia?",a:"Frecuencia, intensidad y duración",i:["Peso, altura y temperatura","Presión, volumen y masa","Velocidad, peso y longitud"]},
-
-{q:"¿Qué es la electroterapia?",a:"Una técnica de rehabilitación basada en la aplicación controlada de corrientes eléctricas",i:["Una técnica basada únicamente en ultrasonidos","Un método de diagnóstico mediante rayos X","Una técnica basada únicamente en calor"]},
-
-{q:"¿Qué características pueden variar en las corrientes utilizadas en electroterapia?",a:"Intensidad, frecuencia, forma de onda y duración",i:["Solo el color y la temperatura","Solo la tensión de alimentación","Solo el tamaño de los electrodos"]},
-
-{q:"¿Cuál es uno de los principales objetivos terapéuticos de la electroterapia?",a:"Analgesia",i:["Realizar radiografías","Medir la glucosa","Eliminar completamente la movilidad muscular"]},
-
-{q:"¿Qué otros objetivos terapéuticos tiene la electroterapia?",a:"Estimulación muscular, reeducación neuromuscular, mejora de la circulación y reducción del edema",i:["Solo aumentar la temperatura corporal","Solo medir la frecuencia cardíaca","Solo realizar diagnósticos por imagen"]},
-
-{q:"¿Qué diferencia existe entre estimulación sensitiva y motora?",a:"La sensitiva busca efectos analgésicos sin contracción muscular y la motora provoca contracciones musculares controladas",i:["Ambas producen siempre la misma contracción","La sensitiva siempre produce contracciones intensas","La motora no activa fibras nerviosas"]},
-
-{q:"¿Qué tipo de fibras se activan en la estimulación sensitiva?",a:"Fibras nerviosas sensitivas",i:["Fibras musculares exclusivamente","Fibras motoras exclusivamente","Células óseas"]},
-
-{q:"¿Cuál es el objetivo principal de la estimulación sensitiva?",a:"La analgesia",i:["La contracción muscular","La producción de calor","La reducción de la frecuencia cardíaca"]},
-
-{q:"¿Qué intensidad suele utilizarse en la estimulación sensitiva?",a:"Baja",i:["Siempre alta","Siempre máxima","Nula"]},
-
-{q:"¿Se produce movimiento muscular durante la estimulación sensitiva?",a:"No",i:["Sí, siempre","Solo con intensidad máxima","Solo durante la fase de reposo"]},
-
-{q:"¿Qué sensación suele percibir el paciente durante la estimulación sensitiva?",a:"Hormigueo",i:["Contracción intensa","Dolor intenso","Ausencia total de sensación"]},
-
-{q:"¿Qué equipo es típico de la estimulación sensitiva?",a:"TENS",i:["EMS","Corrientes rusas exclusivamente","Multímetro"]},
-
-{q:"¿Qué tipo de fibras se activan principalmente en la estimulación motora?",a:"Fibras nerviosas motoras",i:["Fibras sensitivas exclusivamente","Células óseas","Fibras ópticas"]},
-
-{q:"¿Cuál es el objetivo principal de la estimulación motora?",a:"Provocar contracciones musculares controladas",i:["Producir únicamente hormigueo","Medir la impedancia","Eliminar toda sensación del paciente"]},
-
-{q:"¿Qué intensidad suele utilizarse en la estimulación motora?",a:"Media-alta",i:["Siempre baja","Nula","Siempre mínima"]},
-
-{q:"¿Se produce movimiento muscular durante la estimulación motora?",a:"Sí",i:["No","Solo durante el apagado","Nunca"]},
-
-{q:"¿Qué sensación suele percibir el paciente durante la estimulación motora?",a:"Contracción",i:["Solo hormigueo","Frío","Ausencia total de sensación"]},
-
-{q:"¿Qué equipos son típicos de la estimulación motora?",a:"EMS y corrientes rusas",i:["TENS exclusivamente","Multímetros","Osciloscopios"]},
-
-{q:"¿Qué equipos pertenecen a la electroterapia de baja frecuencia?",a:"TENS, corrientes galvánicas, diadinámicas y farádicas",i:["Interferenciales y rusas exclusivamente","Solo ultrasonidos","Solo equipos de iontoforesis"]},
-
-{q:"¿Qué equipos pertenecen a la electroterapia de media frecuencia?",a:"Corrientes interferenciales y corrientes rusas",i:["TENS y corrientes galvánicas","Corrientes farádicas únicamente","Ultrasonidos y vacío"]},
-
-{q:"¿Qué son los equipos combinados de electroterapia?",a:"Equipos que combinan electroterapia con otras técnicas",i:["Equipos que solo generan corriente continua","Equipos que no utilizan electrodos","Equipos destinados exclusivamente a diagnóstico"]},
-
-{q:"¿Qué combinaciones aparecen como equipos de electroterapia combinados?",a:"Electroterapia + ultrasonidos y electroterapia + vacío",i:["Electroterapia + rayos X y láser","Electroterapia + ECG únicamente","Electroterapia + radiografía"]},
-
-{q:"¿Qué elementos participan en la generación de impulsos eléctricos?",a:"Osciladores, generadores de señal, circuitos de control y microcontroladores",i:["Solo electrodos","Solo fusibles","Solo transformadores"]},
-
-{q:"¿Qué parámetros pueden modificarse durante la modulación de la señal?",a:"Frecuencia, anchura de pulso, duración del tratamiento e intensidad",i:["Solo el color de la pantalla","Solo el tamaño del equipo","Solo la temperatura ambiente"]},
-
-{q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal",i:["Mostrar los parámetros al usuario","Sujetar los electrodos","Medir la temperatura del paciente"]},
-
-{q:"¿Qué elementos pueden formar parte de la etapa de potencia?",a:"Amplificación, transformadores de aislamiento y circuitos limitadores de corriente",i:["Solo botones y pantalla","Solo cables y electrodos","Solo baterías"]},
-
-{q:"¿Qué elementos forman la salida hacia el paciente?",a:"Electrodos y cables",i:["Fusibles y baterías","Osciladores y microcontroladores","Pantalla y teclado"]},
-
-{q:"¿Cuál es la secuencia de bloques funcionales de un equipo de electroterapia?",a:"Fuente de alimentación → generador de señal → control electrónico → etapa de potencia → aislamiento → electrodos → paciente",i:["Paciente → pantalla → batería → teclado","Electrodos → fuente → paciente → generador","Generador → paciente → teclado → fusible"]},
-
-{q:"¿Qué debemos conocer de cada bloque funcional del equipo?",a:"Función, componentes principales y posibles averías",i:["Solo su precio","Solo su fabricante","Solo su tamaño"]},
-
-{q:"¿En qué unidad se expresa habitualmente la intensidad de corriente en electroterapia?",a:"mA",i:["Hz","s","V exclusivamente"]},
-
-{q:"¿En qué unidad se expresa la frecuencia?",a:"Hz",i:["mA","s","Ω"]},
-
-{q:"¿Qué tipos de frecuencia se contemplan en los equipos de electroterapia?",a:"Baja frecuencia y media frecuencia",i:["Solo alta frecuencia","Solo frecuencia continua","Frecuencia óptica y acústica"]},
-
-{q:"¿Qué es la anchura de pulso?",a:"Un parámetro de la señal que influye sobre el efecto terapéutico",i:["La longitud del cable","El tamaño del electrodo","La duración de la batería"]},
-
-{q:"¿Qué elemento controla el tiempo de tratamiento?",a:"La temporización electrónica",i:["El electrodo","El fusible","El cable de alimentación"]},
-
-{q:"¿Qué es el ciclo de trabajo?",a:"La relación entre trabajo y reposo",i:["La relación entre voltaje y corriente","El tiempo total de encendido del equipo","La duración de la batería"]},
-
-{q:"¿Qué tipo de corriente se asocia a una onda continua?",a:"Corriente galvánica",i:["TENS","Corrientes rusas","Corrientes interferenciales"]},
-
-{q:"¿Qué equipos utilizan habitualmente una onda rectangular?",a:"TENS y EMS",i:["Solo corrientes interferenciales","Solo corrientes rusas","Solo corriente galvánica"]},
-
-{q:"¿Qué tipos de onda bifásica existen?",a:"Simétrica y asimétrica",i:["Continua y cuadrada","Galvánica y rusa","Analógica y digital"]},
-
-{q:"¿Qué tipo de onda se asocia a las corrientes interferenciales?",a:"Onda sinusoidal",i:["Onda continua","Onda rectangular exclusivamente","Onda triangular"]},
-
-{q:"¿Qué tipo de onda se asocia a las corrientes rusas?",a:"Onda modulada",i:["Onda continua","Onda rectangular simple","Onda galvánica"]},
-
-{q:"¿Qué tipos de electrodos se utilizan en electroterapia?",a:"Autoadhesivos, de silicona conductiva y de caucho",i:["Solo metálicos","Solo de plástico aislante","Solo de madera"]},
-
-{q:"¿Qué aspecto debe conocerse de los electrodos autoadhesivos?",a:"Sus características y vida útil",i:["Solo su color","Solo su peso","Solo su fabricante"]},
-
-{q:"¿Qué aspecto es importante en el mantenimiento de los electrodos de silicona conductiva?",a:"Su mantenimiento",i:["Su capacidad de emitir luz","Su temperatura de almacenamiento únicamente","Su tamaño de pantalla"]},
-
-{q:"¿Qué aspectos deben estudiarse en los electrodos?",a:"Materiales conductores, impedancia, deterioro, limpieza y sustitución",i:["Solo el color y peso","Solo la marca","Solo la longitud del cable"]},
-
-{q:"¿Qué puede ocurrir si los electrodos están deteriorados?",a:"Puede producirse un mal contacto y aumentar el riesgo durante el tratamiento",i:["Aumenta automáticamente la potencia del equipo","Se elimina la corriente eléctrica","El equipo genera ultrasonidos"]},
-
-{q:"¿Cuáles son algunos de los principales riesgos eléctricos en electroterapia?",a:"Quemaduras, sobrestimulación, corrientes excesivas y mal contacto de electrodos",i:["Solo ruido y vibraciones","Solo sobrecalentamiento de la pantalla","Solo pérdida de memoria"]},
-
-{q:"¿Qué medidas de protección eléctrica se utilizan en equipos de electroterapia?",a:"Aislamiento eléctrico, limitación de corriente, fusibles y protección frente a sobrecargas",i:["Solo pintura aislante","Solo ventiladores","Solo pantallas táctiles"]},
-
-{q:"¿Qué elementos forman parte de la seguridad electromédica?",a:"Clasificación de partes aplicadas, seguridad electromédica, marcado CE y gestión del riesgo",i:["Solo el diseño exterior","Solo el precio del equipo","Solo el manual de usuario"]},
-
-{q:"¿Qué debe comprobarse durante una inspección visual?",a:"Estado de cables, conectores y electrodos",i:["Solo el color de la carcasa","Solo la temperatura","Solo la batería"]},
-
-{q:"¿Qué elementos deben comprobarse funcionalmente?",a:"Encendido, alarmas, pantalla y teclado",i:["Solo los electrodos","Solo los cables","Solo los fusibles"]},
-
-{q:"¿Qué parámetros pueden medirse técnicamente en un equipo de electroterapia?",a:"Intensidad suministrada, frecuencia de salida, duración de pulso y simetría de la señal",i:["Solo el peso del equipo","Solo la temperatura ambiente","Solo el tamaño de la pantalla"]},
-
-{q:"¿Qué instrumento puede utilizarse para medir parámetros eléctricos básicos?",a:"Multímetro",i:["Termómetro","Balanza","Cronómetro"]},
-
-{q:"¿Qué instrumento permite observar la forma de la señal eléctrica?",a:"Osciloscopio",i:["Multímetro exclusivamente","Termómetro","Balanza"]},
-
-{q:"¿Qué equipo puede utilizarse para verificar equipos de electroterapia?",a:"Analizador de electrocirugía/electroterapia",i:["Solo una balanza","Solo un termómetro","Solo un tensiómetro"]},
-
-{q:"¿Qué actividades forman parte del mantenimiento preventivo?",a:"Revisiones periódicas, limpieza, sustitución de accesorios y comprobación de conectores",i:["Solo reparar averías después de producirse","Solo cambiar la carcasa","Solo limpiar la pantalla"]},
-
-{q:"¿Qué otras tareas forman parte del mantenimiento preventivo?",a:"Pruebas de funcionamiento y registro documental",i:["Solo cambiar los electrodos diariamente","Solo apagar el equipo","Solo revisar el color de los cables"]},
-
-{q:"¿Cuál es una avería típica de la alimentación?",a:"El equipo no enciende",i:["La señal es perfectamente correcta","El electrodo funciona correctamente","La pantalla muestra todos los parámetros"]},
-
-{q:"¿Qué avería puede producirse relacionada con la batería?",a:"Fallos de batería",i:["Aumento de la frecuencia programada","Mejora de la señal","Aumento automático del tiempo de tratamiento"]},
-
-{q:"¿Cuáles son averías típicas de la salida?",a:"No generar corriente o presentar una intensidad incorrecta",i:["Solo problemas de teclado","Solo problemas de pantalla","Solo problemas de limpieza"]},
-
-{q:"¿Qué averías pueden producirse en los controles?",a:"Botones defectuosos y pantalla dañada",i:["Electrodos nuevos","Cables en perfecto estado","Aumento de la duración de la batería"]},
-
-{q:"¿Qué averías pueden producirse en los accesorios?",a:"Cables rotos y electrodos deteriorados",i:["Aumento de la frecuencia","Mejora del aislamiento","Aumento automático de la intensidad"]},
-
-{q:"¿Qué problema puede aparecer si un cable de un equipo de electroterapia está roto?",a:"Una avería en los accesorios",i:["Una mejora de la estimulación","Un aumento automático de la potencia","Una reducción del tiempo de tratamiento"]}
-
-{q:"¿Qué es un electroestimulador muscular (EMS)?",a:"Un equipo electromédico destinado a generar impulsos eléctricos que provocan la contracción controlada de los músculos",i:["Un equipo destinado a realizar radiografías","Un equipo destinado a medir la presión arterial","Un equipo destinado únicamente a producir calor"]},
-
-{q:"¿Cómo consigue un EMS provocar la contracción muscular?",a:"Mediante la estimulación de los nervios motores con impulsos eléctricos",i:["Mediante ondas ultrasónicas","Mediante calor","Mediante presión mecánica"]},
-
-{q:"¿Cuál es una aplicación del electroestimulador muscular?",a:"Reeducación muscular",i:["Diagnóstico por imagen","Medición de la temperatura","Análisis de sangre"]},
-
-{q:"¿Qué aplicación del EMS ayuda a prevenir la pérdida de masa muscular?",a:"Prevención de atrofias",i:["Medición de la presión","Tratamiento de infecciones","Diagnóstico radiológico"]},
-
-{q:"¿Para qué se puede utilizar un EMS?",a:"Fortalecimiento muscular",i:["Medición de la glucosa","Realización de radiografías","Control de la temperatura"]},
-
-{q:"¿Qué otra aplicación tiene el electroestimulador muscular?",a:"Recuperación funcional",i:["Diagnóstico cardíaco","Medición de la presión ocular","Tratamiento dental"]},
-
-{q:"¿Qué tipo de rehabilitación puede realizarse mediante EMS?",a:"Rehabilitación neuromuscular",i:["Rehabilitación exclusivamente respiratoria","Rehabilitación exclusivamente visual","Rehabilitación exclusivamente auditiva"]},
-
-{q:"¿Cuál es el primer paso del funcionamiento de un EMS?",a:"El equipo genera impulsos eléctricos",i:["El paciente genera la corriente","Los electrodos generan la señal por sí mismos","El músculo genera automáticamente la corriente"]},
-
-{q:"¿Cómo se transmiten los impulsos eléctricos al paciente?",a:"Mediante electrodos",i:["Mediante ultrasonidos","Mediante radiación","Mediante sensores de temperatura"]},
-
-{q:"¿Qué provoca la corriente eléctrica aplicada mediante un EMS?",a:"Excita los nervios motores",i:["Destruye las fibras musculares","Reduce la temperatura corporal","Bloquea todos los nervios"]},
-
-{q:"¿Qué ocurre cuando el nervio motor es excitado por el EMS?",a:"Provoca la contracción muscular",i:["Provoca la relajación permanente","Produce una lesión muscular","Detiene la circulación"]},
-
-{q:"¿Qué diferencia existe entre una contracción fisiológica y una contracción provocada eléctricamente?",a:"La fisiológica es producida por el sistema nervioso y la otra mediante un estímulo eléctrico",i:["Ambas son exactamente iguales","La fisiológica se produce mediante electrodos","La contracción eléctrica no activa los nervios"]},
-
-{q:"¿De qué están formados los músculos?",a:"De haces de fibras musculares",i:["Solo de nervios","Solo de tejido óseo","Solo de vasos sanguíneos"]},
-
-{q:"¿Qué pueden hacer los nervios o neuronas sobre las fibras musculares?",a:"Activarlas mediante un impulso eléctrico",i:["Destruirlas mediante calor","Medir su temperatura","Aumentar su tamaño automáticamente"]},
-
-{q:"¿Cómo puede lograrse la activación muscular mediante un EMS?",a:"A través de la piel mediante un estímulo eléctrico",i:["Mediante radiografías","Mediante presión sobre los huesos","Mediante cambios de temperatura"]},
-
-{q:"¿Cuál es la secuencia de bloques de un electroestimulador muscular?",a:"Fuente de alimentación → microprocesador → generador de impulsos → etapa de potencia → sistema de aislamiento → electrodos → paciente",i:["Paciente → electrodos → batería → microprocesador","Electrodos → paciente → generador → fuente de alimentación","Microprocesador → paciente → electrodos → batería"]},
-
-{q:"¿Por qué la mayoría de los electroestimuladores funcionan con baterías?",a:"Para reducir los riesgos de corriente eléctrica y electrocución",i:["Para aumentar el tamaño del equipo","Para eliminar la necesidad de electrodos","Para aumentar siempre la intensidad"]},
-
-{q:"¿Qué componente del sistema controla el funcionamiento del electroestimulador?",a:"El microprocesador",i:["El electrodo","El fusible","El paciente"]},
-
-{q:"¿Qué componente genera los impulsos eléctricos?",a:"El generador de impulsos",i:["El electrodo","El fusible","La pantalla"]},
-
-{q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal eléctrica",i:["Mostrar los parámetros","Sujetar los electrodos","Medir la temperatura"]},
-
-{q:"¿Cuál es la función del sistema de aislamiento?",a:"Reducir los riesgos eléctricos para el paciente",i:["Aumentar la frecuencia","Aumentar la duración del tratamiento","Generar las contracciones directamente"]},
-
-{q:"¿Qué componente pone en contacto la señal eléctrica con el paciente?",a:"Los electrodos",i:["El microprocesador","El fusible","La batería"]},
-
-{q:"¿Qué circuito integrado aparece en el ejemplo de estimulador muscular?",a:"IC 7555",i:["IC 5555","IC 8086","IC 7805"]},
-
-{q:"¿Para qué se utiliza el IC 7555 en el ejemplo?",a:"Como multivibrador astable para generar pulsos",i:["Como fusible","Como transformador","Como electrodo"]},
-
-{q:"¿Aproximadamente qué frecuencia generan los pulsos del ejemplo con el IC 7555?",a:"80 Hz",i:["8 Hz","800 Hz","8000 Hz"]},
-
-{q:"¿Qué componente permite controlar la intensidad en el circuito de ejemplo?",a:"El potenciómetro VR1",i:["El LED1","El fusible","El transformador"]},
-
-{q:"¿Qué indica el nivel de brillo del LED1?",a:"La amplitud de los pulsos",i:["La temperatura del paciente","La duración de la batería","La frecuencia cardíaca"]},
-
-{q:"¿Qué ocurre si se aumenta la intensidad de estimulación en el circuito de ejemplo?",a:"Se puede modificar la resistencia para aumentar el nivel de intensidad",i:["Se desconectan los electrodos","Se elimina la señal","Se apaga automáticamente el equipo"]},
-
-{q:"¿Qué tipo de transformador es X1 en el circuito de ejemplo?",a:"Un pequeño transformador de red",i:["Un transformador de audio","Un transformador hidráulico","Un transformador óptico"]},
-
-{q:"¿Qué tensión tiene aproximadamente el secundario del transformador X1?",a:"12 V",i:["5 V","60 V","220 V"]},
-
-{q:"¿Qué tensión de salida aproximada proporciona el circuito de ejemplo?",a:"60 V",i:["12 V","220 V","5 V"]},
-
-{q:"¿Por qué la salida del circuito de ejemplo no supone un riesgo importante de descarga eléctrica?",a:"Porque la corriente de salida es muy pequeña",i:["Porque no utiliza electrodos","Porque funciona sin electricidad","Porque la tensión es siempre cero"]},
-
-{q:"¿En qué unidad se mide la intensidad de estimulación?",a:"mA",i:["Hz","segundos","Ohmios"]},
-
-{q:"¿Qué determina la intensidad de estimulación?",a:"La fuerza de la estimulación",i:["El tamaño de la pantalla","La duración de la batería","La forma del electrodo"]},
-
-{q:"¿Qué regula la intensidad del EMS?",a:"El nivel de contracción muscular",i:["La temperatura corporal","La frecuencia cardíaca","La longitud de los cables"]},
-
-{q:"¿En qué unidad se mide la frecuencia?",a:"Hz",i:["mA","Microsegundos","Ohmios"]},
-
-{q:"¿Qué determina la frecuencia en un EMS?",a:"La calidad de la contracción",i:["El tamaño de los electrodos","La duración de la batería","El brillo de la pantalla"]},
-
-{q:"¿Qué puede ocurrir con frecuencias de 1 a 10 Hz?",a:"Sacudidas musculares",i:["Contracción sostenida","Ausencia total de estimulación","Parálisis muscular"]},
-
-{q:"¿Qué efecto se busca habitualmente entre 20 y 50 Hz?",a:"Contracción sostenida",i:["Ausencia de contracción","Sacudidas aisladas únicamente","Relajación permanente"]},
-
-{q:"¿Para qué pueden utilizarse frecuencias de 50 a 100 Hz?",a:"Fortalecimiento muscular",i:["Medición de la temperatura","Diagnóstico por imagen","Reducción de la frecuencia cardíaca"]},
-
-{q:"¿Qué es el tiempo de trabajo en un EMS?",a:"La duración de la contracción",i:["El tiempo que tarda en encenderse la pantalla","El tiempo de carga de la batería","El tiempo de limpieza"]},
-
-{q:"¿Qué es el tiempo de reposo?",a:"El tiempo entre contracciones",i:["El tiempo de encendido del equipo","El tiempo de carga de los electrodos","El tiempo de calentamiento"]},
-
-{q:"¿Qué función tienen las rampas en un EMS?",a:"Permiten aumentar y disminuir progresivamente la intensidad",i:["Aumentan la temperatura del paciente","Eliminan la necesidad de electrodos","Reducen la frecuencia a cero"]},
-
-{q:"¿En qué unidad se mide la anchura de pulso?",a:"Microsegundos",i:["Milisegundos exclusivamente","Hertz","Amperios"]},
-
-{q:"¿Qué influye en el reclutamiento de fibras nerviosas?",a:"La anchura de pulso",i:["El color del electrodo","El tamaño de la pantalla","La longitud del cable de alimentación"]},
-
-{q:"¿Cuál es un valor habitual de anchura de pulso?",a:"200-400 microsegundos",i:["1-10 microsegundos","1-10 segundos","1000-2000 segundos"]},
-
-{q:"¿Qué tipo de onda es la más utilizada en EMS?",a:"Onda rectangular",i:["Onda sinusoidal exclusivamente","Onda continua exclusivamente","Onda triangular"]},
-
-{q:"¿Qué característica tiene la onda bifásica simétrica?",a:"Es bipolar y simétrica",i:["Es siempre continua","No tiene polaridad","Es exclusivamente sinusoidal"]},
-
-{q:"¿Por qué se utiliza mucho la onda bifásica simétrica?",a:"Para evitar la polarización de los tejidos",i:["Para aumentar la temperatura","Para eliminar los electrodos","Para reducir el tamaño del equipo"]},
-
-{q:"¿Qué es una onda bifásica asimétrica?",a:"Una onda bipolar con fases de diferente forma o amplitud",i:["Una corriente continua","Una onda sin ninguna fase","Una onda exclusivamente galvánica"]},
-
-{q:"¿Qué tipo de corriente utilizan las corrientes rusas?",a:"Corriente alterna de media frecuencia modulada",i:["Corriente continua exclusivamente","Corriente galvánica","Corriente de muy baja frecuencia exclusivamente"]},
-
-{q:"¿Qué son los electrodos de un EMS?",a:"Almohadillas que se adhieren a la piel",i:["Sensores de temperatura","Baterías externas","Fusibles de protección"]},
-
-{q:"¿Qué tipos de electrodos pueden utilizarse en un EMS?",a:"Autoadhesivos, de silicona conductiva y de caucho conductor",i:["Solo metálicos","Solo de plástico","Solo de madera"]},
-
-{q:"¿Qué características deben tener los electrodos?",a:"Buena conductividad, tamaño adecuado y buen estado de conservación",i:["Alta temperatura y gran peso","Baja conductividad","Superficie aislante"]},
-
-{q:"¿Cuál es un problema frecuente de los electrodos?",a:"El desgaste",i:["La generación de corriente","El aumento de la batería","La mejora de la conductividad"]},
-
-{q:"¿Qué problema puede producir una mala adherencia de los electrodos?",a:"Un incremento de la impedancia",i:["Una reducción automática de la frecuencia","Un aumento de la batería","Una mejora de la señal"]},
-
-{q:"¿Qué problema puede producir un cable de electrodo roto?",a:"Puede impedir la correcta estimulación",i:["Aumenta automáticamente la intensidad","Mejora la conductividad","Aumenta la duración del tratamiento"]},
-
-{q:"¿Qué riesgos pueden producirse durante la electroestimulación?",a:"Quemaduras, exceso de corriente, irritación cutánea y colocación incorrecta de electrodos",i:["Solo pérdida de batería","Solo daños en la pantalla","Solo aumento de temperatura del equipo"]},
-
-{q:"¿Qué sistema limita la corriente para proteger al paciente?",a:"Los limitadores de corriente",i:["Los electrodos","La pantalla","El microprocesador exclusivamente"]},
-
-{q:"¿Qué otros sistemas de protección puede tener un EMS?",a:"Aislamiento eléctrico, fusibles y alarmas",i:["Solo ventiladores","Solo pantallas","Solo conectores"]},
-
-{q:"¿Qué puede ocurrir si los electrodos se colocan sobre el corazón?",a:"Puede provocarse una arritmia cardíaca",i:["Mejora la estimulación","No ocurre ningún efecto","Aumenta la duración de la batería"]},
-
-{q:"¿Qué puede ocurrir si los electrodos se colocan sobre los cables de un marcapasos?",a:"Puede provocarse una arritmia cardíaca",i:["Se mejora el funcionamiento del marcapasos","No ocurre ningún efecto","Se reduce automáticamente la intensidad"]},
-
-{q:"¿Qué puede ocurrir si se colocan electrodos sobre la garganta?",a:"Podría causar una presión arterial baja",i:["Aumenta la fuerza muscular","Produce una mejora de la circulación","No produce ningún efecto"]},
-
-{q:"¿Qué riesgo existe al colocar electrodos sobre el útero durante el embarazo?",a:"Puede causar daño al feto",i:["Aumenta la fuerza muscular","Mejora la circulación","No existe ningún riesgo"]},
-
-{q:"¿Cuál es una contraindicación del EMS?",a:"Marcapasos",i:["Piel sana","Uso de electrodos en zonas permitidas","Rehabilitación muscular"]},
-
-{q:"¿Qué otro dispositivo implantado constituye una contraindicación?",a:"Desfibriladores implantables",i:["Termómetros","Tensiómetros","Básculas"]},
-
-{q:"¿El embarazo es una contraindicación para la electroestimulación?",a:"Sí",i:["No","Solo durante el último día","Solo cuando la intensidad es baja"]},
-
-{q:"¿Qué problema cutáneo constituye una contraindicación?",a:"Lesiones cutáneas",i:["Piel sana","Piel limpia","Piel sin lesiones"]},
-
-{q:"¿Qué debe comprobarse al encender un EMS?",a:"El funcionamiento del equipo",i:["Solo el color de los cables","Solo el peso del equipo","Solo la temperatura exterior"]},
-
-{q:"¿Qué elementos deben revisarse en la parte de control del equipo?",a:"La pantalla y los mandos",i:["Solo la batería","Solo los electrodos","Solo los fusibles"]},
-
-{q:"¿Qué debe comprobarse en los canales de salida?",a:"Su correcto funcionamiento",i:["Solo su color","Solo su tamaño","Solo su temperatura"]},
-
-{q:"¿Qué parámetros eléctricos deben comprobarse durante una verificación funcional?",a:"Intensidad suministrada, frecuencia generada y anchura de pulso",i:["Solo la temperatura","Solo el peso","Solo el tamaño de la pantalla"]},
-
-{q:"¿Qué elementos externos deben revisarse durante una verificación funcional?",a:"Electrodos y cables",i:["Solo la carcasa","Solo la batería","Solo la pantalla"]},
-
-{q:"¿Qué sistemas de seguridad deben comprobarse?",a:"Alarmas y sistemas de seguridad",i:["Solo los electrodos","Solo la pantalla","Solo la carcasa"]},
-
-{q:"¿Qué tareas forman parte del mantenimiento preventivo?",a:"Limpieza exterior, revisión de conectores y comprobación de cables",i:["Solo reparar averías","Solo cambiar la batería","Solo limpiar los electrodos"]},
-
-{q:"¿Qué debe hacerse con los accesorios deteriorados?",a:"Sustituirlos",i:["Mantenerlos sin revisar","Aumentar la intensidad","Desconectar las alarmas"]},
-
-{q:"¿Qué debe verificarse durante el mantenimiento preventivo?",a:"Los parámetros de salida",i:["Solo el color del equipo","Solo el tamaño de la pantalla","Solo la temperatura ambiente"]},
-
-{q:"¿Por qué es importante el registro documental de las intervenciones?",a:"Porque permite dejar constancia del mantenimiento y las reparaciones realizadas",i:["Para aumentar la intensidad","Para cambiar la frecuencia automáticamente","Para eliminar las alarmas"]},
-
-{q:"¿Qué puede causar que un EMS no se encienda?",a:"Un fusible, la fuente de alimentación o la batería",i:["Solo un electrodo nuevo","Solo una frecuencia demasiado baja","Solo una pantalla limpia"]},
-
-{q:"¿Qué puede causar que no haya estimulación?",a:"Un cable roto, un electrodo defectuoso o un canal averiado",i:["Una batería completamente nueva","Una pantalla limpia","Una frecuencia correctamente programada"]},
-
-{q:"¿Qué puede causar una intensidad incorrecta?",a:"Un fallo de calibración o un problema en la etapa de potencia",i:["Solo una pantalla limpia","Solo un electrodo nuevo","Solo una batería nueva"]},
-
-{q:"¿Qué puede causar un mensaje de error en un EMS?",a:"Problemas de software o una mala conexión de los electrodos",i:["Solo una buena conexión","Solo una batería nueva","Solo una limpieza exterior"]}
-
-{q:"¿Qué significa TENS?",a:"Estimulación Nerviosa Eléctrica Transcutánea",i:["Estimulación Nerviosa Eléctrica Profunda","Tratamiento Eléctrico Neuromuscular Superficial","Terapia Eléctrica Nerviosa Sistémica"]},
-
-{q:"¿Qué es el TENS?",a:"Un equipo de electroterapia que aplica impulsos eléctricos controlados sobre la piel para estimular los nervios sensitivos",i:["Un equipo que genera ultrasonidos","Un equipo destinado a producir contracciones musculares intensas","Un equipo utilizado para realizar radiografías"]},
-
-{q:"¿Cuál es el objetivo principal del TENS?",a:"Disminuir la percepción del dolor",i:["Producir contracciones musculares intensas","Aumentar la temperatura corporal","Medir la actividad cardíaca"]},
-
-{q:"¿Qué tipo de nervios estimula principalmente el TENS?",a:"Los nervios sensitivos",i:["Los nervios motores exclusivamente","Los nervios ópticos","Los nervios autónomos exclusivamente"]},
-
-{q:"¿El TENS produce habitualmente contracciones musculares significativas?",a:"No",i:["Sí, siempre","Sí, con cualquier intensidad","Solo durante el apagado"]},
-
-{q:"¿Para qué se puede utilizar el TENS?",a:"Para el control del dolor agudo y crónico",i:["Para realizar diagnósticos por imagen","Para medir la presión arterial","Para producir atrofia muscular"]},
-
-{q:"¿Qué tipo de dolor puede tratarse mediante TENS?",a:"Dolor musculoesquelético",i:["Solo dolor dental","Solo dolor ocular","Solo dolor producido por infecciones"]},
-
-{q:"¿Para qué tipo de dolor puede utilizarse el TENS después de una intervención?",a:"Dolor postoperatorio",i:["Dolor exclusivamente dental","Dolor exclusivamente ocular","Dolor exclusivamente auditivo"]},
-
-{q:"¿Qué problema de la zona lumbar aparece entre las aplicaciones del TENS?",a:"Lumbalgias",i:["Fracturas","Luxaciones de hombro","Problemas de visión"]},
-
-{q:"¿Qué problema de la zona cervical puede tratarse mediante TENS?",a:"Cervicalgias",i:["Fracturas de cadera","Problemas auditivos","Lesiones oculares"]},
-
-{q:"¿Qué tipo de lesión de los tendones aparece entre las aplicaciones del TENS?",a:"Tendinitis",i:["Fracturas óseas","Luxaciones","Quemaduras"]},
-
-{q:"¿Cuál es el primer paso del funcionamiento del TENS?",a:"El equipo genera impulsos eléctricos",i:["El paciente genera la corriente","Los electrodos generan la señal por sí mismos","La piel genera automáticamente los impulsos"]},
-
-{q:"¿Qué ocurre después de que el equipo genere los impulsos eléctricos?",a:"Los impulsos llegan a los electrodos",i:["Los impulsos desaparecen","Los impulsos llegan directamente al corazón","Los impulsos se convierten en ultrasonidos"]},
-
-{q:"¿Qué función realizan los electrodos en el TENS?",a:"Transmiten la corriente a través de la piel",i:["Generan la corriente por sí mismos","Miden la temperatura corporal","Amplifican la señal sin ningún circuito"]},
-
-{q:"¿Qué fibras nerviosas estimula el TENS?",a:"Las fibras nerviosas sensitivas",i:["Las fibras musculares exclusivamente","Las fibras óseas","Las fibras visuales"]},
-
-{q:"¿Qué efecto se busca al estimular las fibras nerviosas sensitivas con TENS?",a:"Reducir la percepción del dolor",i:["Aumentar la percepción del dolor","Producir una lesión muscular","Detener la circulación sanguínea"]},
-
-{q:"¿Qué teoría explica parte del efecto analgésico del TENS?",a:"La teoría de la puerta de entrada del dolor",i:["La teoría de la contracción muscular","La teoría de la circulación sanguínea","La teoría de la temperatura corporal"]},
-
-{q:"¿Qué ocurre según la teoría de la puerta de entrada del dolor?",a:"La estimulación sensitiva puede disminuir la transmisión de las señales dolorosas hacia el cerebro",i:["La estimulación aumenta siempre el dolor","La corriente destruye los nervios sensitivos","La corriente bloquea permanentemente el cerebro"]},
-
-{q:"¿Qué sensación puede percibir el paciente durante un tratamiento con TENS?",a:"Un hormigueo agradable",i:["Una contracción muscular intensa","Un dolor insoportable","Una sensación de quemadura intensa"]},
-
-{q:"¿Cuál es la secuencia de bloques de un equipo TENS?",a:"Fuente de alimentación → microprocesador → generador de impulsos → etapa de potencia → sistema de aislamiento → electrodos → paciente",i:["Paciente → electrodos → batería → microprocesador","Electrodos → paciente → generador → fuente de alimentación","Microprocesador → paciente → electrodos → batería"]},
-
-{q:"¿Por qué la mayoría de los equipos TENS funcionan con baterías?",a:"Para reducir los riesgos de corriente eléctrica y electrocución",i:["Para aumentar siempre la intensidad","Para eliminar los electrodos","Para aumentar la frecuencia automáticamente"]},
-
-{q:"¿En qué unidad se mide la intensidad del TENS?",a:"Miliamperios (mA)",i:["Hercios (Hz)","Microsegundos","Ohmios"]},
-
-{q:"¿Quién puede ajustar la intensidad del TENS?",a:"El usuario",i:["Únicamente el paciente mediante los electrodos","Solo el fusible","Solo la batería"]},
-
-{q:"¿Qué sensación produce normalmente el ajuste de intensidad del TENS?",a:"Sensación de hormigueo",i:["Contracción muscular intensa","Dolor intenso","Ausencia total de sensación"]},
-
-{q:"¿Qué determina técnicamente la intensidad del TENS?",a:"La amplitud de la corriente suministrada",i:["La duración de la batería","El tamaño de la pantalla","La temperatura de los electrodos"]},
-
-{q:"¿En qué unidad se mide la anchura de pulso?",a:"Microsegundos (µs)",i:["Miliamperios","Hercios","Voltios exclusivamente"]},
-
-{q:"¿Qué valores típicos puede tener la anchura de pulso del TENS?",a:"Entre 50 y 250 µs",i:["Entre 1 y 10 µs","Entre 500 y 1000 segundos","Entre 1 y 5 Hz"]},
-
-{q:"¿En qué influye la anchura de pulso?",a:"En la estimulación nerviosa",i:["En la temperatura corporal","En la duración de la batería","En el tamaño del electrodo"]},
-
-{q:"¿El tiempo de tratamiento del TENS es programable?",a:"Sí",i:["No","Solo en equipos antiguos","Solo cuando la batería está llena"]},
-
-{q:"¿Cuál es normalmente la duración de un tratamiento con TENS?",a:"Entre 15 y 60 minutos",i:["Entre 1 y 5 segundos","Entre 5 y 10 horas","Más de 24 horas"]},
-
-{q:"¿En qué unidad se mide la frecuencia del TENS?",a:"Hercios (Hz)",i:["Miliamperios","Microsegundos","Ohmios"]},
-
-{q:"¿Cuál es un rango habitual de baja frecuencia en TENS?",a:"1-10 Hz",i:["50-120 Hz","200-400 Hz","500-1000 Hz"]},
-
-{q:"¿Cuál es un rango habitual de alta frecuencia en TENS?",a:"50-120 Hz",i:["1-10 Hz","200-400 Hz","500-1000 Hz"]},
-
-{q:"¿Qué puede modificar la frecuencia del TENS?",a:"El efecto fisiológico y la sensación del paciente",i:["El tamaño de la pantalla","La duración de la batería","El peso del equipo"]},
-
-{q:"¿Qué tipo de onda es muy utilizada en los equipos TENS?",a:"Onda rectangular",i:["Onda sinusoidal exclusivamente","Onda continua exclusivamente","Onda triangular exclusivamente"]},
-
-{q:"¿Qué tipo de onda es muy frecuente en los equipos TENS modernos?",a:"Onda bifásica simétrica",i:["Onda continua","Onda triangular","Onda galvánica exclusivamente"]},
-
-{q:"¿Qué son los electrodos de un equipo TENS?",a:"Almohadillas que se adhieren a la piel",i:["Baterías externas","Sensores de temperatura","Fusibles de protección"]},
-
-{q:"¿Qué tipos de electrodos pueden utilizarse en TENS?",a:"Autoadhesivos, de silicona conductiva y de caucho conductor",i:["Solo metálicos","Solo de plástico","Solo de madera"]},
-
-{q:"¿Qué aspectos deben revisarse en los electrodos?",a:"Estado físico, conductividad, limpieza, adherencia e integridad del cable",i:["Solo el color","Solo el peso","Solo la marca"]},
-
-{q:"¿Por qué es importante comprobar la conductividad de los electrodos?",a:"Para garantizar una correcta transmisión de la corriente",i:["Para aumentar la duración de la batería","Para modificar la frecuencia cardíaca","Para eliminar el temporizador"]},
-
-{q:"¿Por qué es importante comprobar la adherencia de los electrodos?",a:"Para asegurar un buen contacto con la piel",i:["Para aumentar la frecuencia","Para reducir el tamaño del equipo","Para aumentar la duración de la batería"]},
-
-{q:"¿Qué sistema de protección evita corrientes excesivas?",a:"La limitación de corriente",i:["El temporizador","La pantalla","El teclado"]},
-
-{q:"¿Qué función tiene el aislamiento eléctrico en un TENS?",a:"Proteger al paciente",i:["Aumentar la frecuencia","Aumentar la intensidad","Generar los impulsos"]},
-
-{q:"¿Qué protección evita daños en el equipo por sobrecargas?",a:"La protección frente a sobrecargas",i:["Los electrodos","El temporizador","La pantalla"]},
-
-{q:"¿Qué función tiene el temporizador automático?",a:"Finalizar el tratamiento programado",i:["Aumentar la intensidad","Modificar la frecuencia","Cambiar los electrodos automáticamente"]},
-
-{q:"¿Qué elementos deben revisarse durante una inspección visual?",a:"Pantalla, teclado, carcasa y conectores",i:["Solo la batería","Solo los electrodos","Solo la frecuencia"]},
-
-{q:"¿Qué debe comprobarse durante la comprobación funcional?",a:"Encendido, ajuste de intensidad, ajuste de frecuencia y temporización",i:["Solo el estado de la carcasa","Solo el peso del equipo","Solo el color de los electrodos"]},
-
-{q:"¿Qué debe comprobarse en la salida del TENS?",a:"Que genera señal y mantiene la frecuencia seleccionada",i:["Solo que la pantalla esté encendida","Solo que la batería esté cargada","Solo que los electrodos sean nuevos"]},
-
-{q:"¿Qué debe mantenerse estable durante la verificación de salida?",a:"La intensidad",i:["La temperatura ambiente","El tamaño de la pantalla","El peso del equipo"]},
-
-{q:"¿Qué tareas forman parte del mantenimiento preventivo del TENS?",a:"Limpieza exterior, revisión de conectores y comprobación de cables",i:["Solo reparar averías","Solo cambiar la batería","Solo limpiar la pantalla"]},
-
-{q:"¿Qué debe hacerse con los accesorios deteriorados?",a:"Sustituirlos",i:["Mantenerlos sin revisar","Aumentar la intensidad","Desconectar las alarmas"]},
-
-{q:"¿Qué debe verificarse durante el mantenimiento preventivo?",a:"Los parámetros de salida",i:["Solo el color del equipo","Solo el tamaño de la pantalla","Solo la temperatura"]},
-
-{q:"¿Qué debe registrarse después de una intervención de mantenimiento?",a:"La intervención realizada",i:["Solo el color del equipo","Solo la intensidad máxima","Solo el número de electrodos"]},
-
-{q:"¿Cuáles pueden ser las causas de que un TENS no se encienda?",a:"Fusible, fuente de alimentación o batería",i:["Solo un electrodo nuevo","Solo una frecuencia baja","Solo una pantalla limpia"]},
-
-{q:"¿Cuáles pueden ser las causas de que no haya estimulación?",a:"Cable roto, electrodo defectuoso o canal averiado",i:["Batería nueva","Pantalla limpia","Frecuencia correctamente seleccionada"]},
-
-{q:"¿Qué puede causar una intensidad inestable en un TENS?",a:"Fallo electrónico, mala conexión o problema de calibración",i:["Solo una batería nueva","Solo una pantalla limpia","Solo un electrodo nuevo"]},
-
-{q:"¿Qué puede causar un mensaje de error en un TENS?",a:"Electrodos desconectados o impedancia excesiva",i:["Una batería completamente cargada","Una conexión correcta","Una frecuencia correctamente programada"]},
-
-{q:"¿Qué indica una impedancia excesiva en un equipo TENS?",a:"Que existe una resistencia elevada al paso de la corriente",i:["Que la batería está completamente cargada","Que la pantalla funciona correctamente","Que la frecuencia es demasiado baja"]},
-
-{q:"¿Qué problema puede provocar una mala conexión de los electrodos?",a:"Una intensidad inestable",i:["Una mejora de la estimulación","Un aumento automático de la batería","Una reducción del tamaño del equipo"]},
-
-{q:"¿Qué problema puede provocar un electrodo defectuoso?",a:"Que no haya una estimulación adecuada",i:["Que aumente automáticamente la frecuencia","Que se cargue la batería","Que mejore la conductividad"]},
-
-{q:"¿Qué problema puede provocar un canal de salida averiado?",a:"Que no haya estimulación en ese canal",i:["Que aumente la duración del tratamiento","Que se cargue la batería","Que aumente automáticamente la frecuencia"]}
-
-  {q:"¿Qué son las corrientes interferenciales?",a:"Son corrientes de electroterapia obtenidas por la interferencia de dos corrientes alternas de media frecuencia.",i:["Son corrientes continuas de baja frecuencia.","Son corrientes exclusivamente térmicas."]},
-
-  {q:"¿Qué frecuencia terapéutica se obtiene mediante la interferencia de dos corrientes de media frecuencia?",a:"Una frecuencia resultante que corresponde a la diferencia entre ambas corrientes.",i:["La suma de las dos frecuencias.","La frecuencia más alta sin ninguna modificación."]},
-
-  {q:"¿Para qué se utilizan principalmente las corrientes interferenciales?",a:"Para analgesia, estimulación muscular y mejora circulatoria.",i:["Únicamente para aumentar la temperatura corporal.","Únicamente para diagnosticar lesiones musculares."]},
-
-  {q:"¿Por qué las corrientes de media frecuencia atraviesan mejor la piel?",a:"Porque la piel presenta una menor resistencia al paso de las corrientes de media frecuencia.",i:["Porque eliminan completamente la resistencia de la piel.","Porque no necesitan electrodos para atravesar la piel."]},
-
-  {q:"¿Qué ventaja producen las corrientes de media frecuencia respecto a las de baja frecuencia?",a:"Generan menos molestias y permiten alcanzar tejidos más profundos.",i:["Producen siempre contracciones máximas.","Eliminan la necesidad de controlar la intensidad."]},
-
-  {q:"¿Qué dos corrientes genera el equipo en el ejemplo de funcionamiento?",a:"Una corriente de 4000 Hz y otra de 4100 Hz.",i:["Una de 100 Hz y otra de 200 Hz.","Una de 2000 Hz y otra de 2500 Hz."]},
-
-  {q:"¿Qué frecuencia de interferencia se obtiene con corrientes de 4000 Hz y 4100 Hz?",a:"100 Hz.",i:["1000 Hz.","8100 Hz."]},
-
-  {q:"¿Cómo se calcula la frecuencia de interferencia?",a:"Restando una frecuencia de media frecuencia de la otra.",i:["Sumando las dos frecuencias.","Multiplicando las dos frecuencias."]},
-
-  {q:"¿Qué frecuencia de interferencia se obtiene con 4000 Hz y 4010 Hz?",a:"10 Hz.",i:["40 Hz.","4010 Hz."]},
-
-  {q:"¿Qué recibe el paciente en una aplicación de corrientes interferenciales?",a:"Una corriente de media frecuencia cuyo efecto biológico corresponde a la frecuencia de interferencia.",i:["Únicamente una corriente continua.","Únicamente la frecuencia portadora sin ningún efecto de interferencia."]},
-
-  {q:"¿Cuál es una aplicación terapéutica de las corrientes interferenciales para el dolor?",a:"La analgesia.",i:["La inmovilización articular.","La eliminación de la sensibilidad."]},
-
-  {q:"¿Qué tipos de dolor pueden tratarse con corrientes interferenciales?",a:"Dolor lumbar, dolor cervical, tendinitis y artrosis.",i:["Únicamente dolores producidos por fracturas.","Únicamente dolores de origen cutáneo."]},
-
-  {q:"¿Para qué se utilizan las corrientes interferenciales en la estimulación muscular?",a:"Para reeducación muscular, recuperación funcional y fortalecimiento.",i:["Para impedir cualquier movimiento muscular.","Para eliminar permanentemente la actividad muscular."]},
-
-  {q:"¿Qué efecto circulatorio pueden ayudar a mejorar las corrientes interferenciales?",a:"Los edemas y algunos problemas vasculares leves.",i:["Las fracturas óseas.","Las lesiones nerviosas graves."]},
-
-  {q:"¿Qué es la frecuencia portadora?",a:"Es la frecuencia base generada por el equipo.",i:["Es el tiempo total del tratamiento.","Es la intensidad máxima que soporta el paciente."]},
-
-  {q:"¿Cuál es un valor habitual de la frecuencia portadora?",a:"4000 Hz.",i:["100 Hz.","10 Hz."]},
-
-  {q:"¿Qué otros valores de frecuencia portadora pueden encontrarse?",a:"2000 Hz, 2500 Hz y 5000 Hz.",i:["10 Hz, 20 Hz y 30 Hz.","100 Hz, 200 Hz y 300 Hz."]},
-
-  {q:"¿En qué unidad se mide la intensidad de las corrientes interferenciales?",a:"En miliamperios (mA).",i:["En hercios (Hz).","En microsegundos (µs)."]},
-
-  {q:"¿Qué determina la intensidad aplicada al paciente?",a:"La sensación percibida por el paciente.",i:["La frecuencia portadora.","El tiempo de encendido del equipo."]},
-
-  {q:"¿Cuál es el tiempo de tratamiento habitual de las corrientes interferenciales?",a:"Entre 15 y 30 minutos.",i:["Entre 1 y 3 segundos.","Entre 2 y 4 horas."]},
-
-  {q:"¿Qué es la frecuencia de interferencia?",a:"Es la diferencia entre las dos corrientes de media frecuencia.",i:["Es la suma de las dos corrientes.","Es siempre igual a la frecuencia portadora."]},
-
-  {q:"¿Qué configuración utiliza cuatro electrodos?",a:"La configuración tetrapolar.",i:["La configuración bipolar.","La configuración unipolar."]},
-
-  {q:"¿Qué configuración utiliza dos electrodos?",a:"La configuración bipolar.",i:["La configuración tetrapolar.","La configuración de cuatro canales."]},
-
-  {q:"¿Dónde se genera la interferencia en la aplicación bipolar?",a:"Dentro del equipo.",i:["Dentro del tejido del paciente.","Únicamente en los electrodos."]},
-
-  {q:"¿Dónde se produce la interferencia en la aplicación tetrapolar?",a:"Dentro de los tejidos del paciente.",i:["Dentro de la fuente de alimentación.","Dentro del temporizador."]},
-
-  {q:"¿Cuál es una ventaja de la aplicación tetrapolar?",a:"Permite una mayor profundidad terapéutica.",i:["No necesita electrodos.","No utiliza corriente eléctrica."]},
-
-  {q:"¿Cuál es la función de la fuente de alimentación?",a:"Proporcionar energía al sistema.",i:["Generar directamente la frecuencia terapéutica.","Transmitir la corriente al paciente sin ningún otro bloque."]},
-
-  {q:"¿Qué averías pueden aparecer en la fuente de alimentación?",a:"El equipo no enciende y pueden existir fallos de tensión.",i:["Únicamente errores de los electrodos.","Únicamente errores de programación."]},
-
-  {q:"¿Cuál es la función del microcontrolador?",a:"Controlar la frecuencia, intensidad, tiempo y programas terapéuticos.",i:["Generar directamente la corriente que recibe el paciente.","Sustituir a los electrodos."]},
-
-  {q:"¿Qué averías pueden indicar un problema en el microcontrolador?",a:"Menús bloqueados y errores de programación.",i:["Únicamente cables rotos.","Únicamente una baja adherencia de los electrodos."]},
-
-  {q:"¿Cuál es la función de los generadores de frecuencia?",a:"Crear las dos corrientes de media frecuencia.",i:["Medir la resistencia de la piel.","Controlar únicamente el tiempo de tratamiento."]},
-
-  {q:"¿Qué frecuencias pueden generar los generadores en el ejemplo estudiado?",a:"4000 Hz y 4100 Hz.",i:["10 Hz y 100 Hz.","100 Hz y 200 Hz."]},
-
-  {q:"¿Qué averías pueden presentar los generadores de frecuencia?",a:"Frecuencias incorrectas o ausencia de señal.",i:["Únicamente fallos de pantalla.","Únicamente rotura de electrodos."]},
-
-  {q:"¿Cuál es la función del módulo de interferencia o modulación?",a:"Combinar ambas corrientes para obtener la frecuencia terapéutica.",i:["Proporcionar alimentación al equipo.","Medir la temperatura del paciente."]},
-
-  {q:"¿Qué puede ocurrir si falla el módulo de interferencia o modulación?",a:"Puede producirse pérdida del efecto interferencial o una estimulación incorrecta.",i:["El equipo siempre aumenta automáticamente la intensidad.","Los electrodos se limpian automáticamente."]},
-
-  {q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal.",i:["Generar los programas terapéuticos.","Mostrar los parámetros en la pantalla."]},
-
-  {q:"¿Qué averías pueden aparecer en la etapa de potencia?",a:"Baja intensidad o salida insuficiente.",i:["Únicamente errores del temporizador.","Únicamente mala adherencia de los electrodos."]},
-
-  {q:"¿Cuál es la función de los electrodos?",a:"Transmitir la corriente al paciente.",i:["Generar las frecuencias de media frecuencia.","Controlar los programas del equipo."]},
-
-  {q:"¿Qué problemas frecuentes pueden presentar los electrodos?",a:"Mala adherencia, rotura de cables e impedancia elevada.",i:["Únicamente errores de programación.","Únicamente fallos de tensión de la fuente."]},
-
-  {q:"¿Cuál es la función del sistema de aislamiento?",a:"Proteger al paciente frente a corrientes peligrosas y reducir las fugas eléctricas.",i:["Aumentar siempre la intensidad de tratamiento.","Generar las dos frecuencias de media frecuencia."]},
-
-  {q:"¿Qué controles y mandos puede tener un equipo de corrientes interferenciales?",a:"Encendido y apagado, selección de programa, regulación de intensidad, selección de frecuencia y temporizador.",i:["Únicamente un interruptor de encendido.","Únicamente un control de temperatura."]},
-
-  {q:"¿Qué función tienen los indicadores luminosos?",a:"Informar visualmente sobre el estado o funcionamiento del equipo.",i:["Generar la corriente terapéutica.","Sustituir el sistema de aislamiento."]},
-
-  {q:"¿Qué función tienen las alarmas del equipo?",a:"Avisar de situaciones anómalas o problemas durante el funcionamiento.",i:["Aumentar automáticamente la frecuencia.","Sustituir los electrodos."]},
-
-  {q:"¿Qué elementos se revisan durante una inspección visual?",a:"Pantalla, teclado, carcasa y electrodos.",i:["Únicamente la fuente de alimentación.","Únicamente el microcontrolador."]},
-
-  {q:"¿Qué se comprueba durante una verificación funcional?",a:"El encendido, el ajuste de intensidad, el cambio de programas y la temporización.",i:["Únicamente el estado exterior de la carcasa.","Únicamente la frecuencia de la red eléctrica."]},
-
-  {q:"¿Qué parámetros se comprueban durante una verificación técnica?",a:"La frecuencia generada, la intensidad suministrada y el funcionamiento de los canales.",i:["Únicamente la limpieza del equipo.","Únicamente el estado de la pantalla."]},
-
-  {q:"¿Qué incluye el mantenimiento preventivo de un equipo de corrientes interferenciales?",a:"Limpieza exterior, revisión de conexiones, sustitución de accesorios deteriorados y verificación de parámetros de salida.",i:["Cambiar siempre todos los componentes internos.","Realizar reparaciones únicamente cuando el equipo deje de funcionar."]},
-
-  {q:"¿Por qué es importante registrar documentalmente las intervenciones de mantenimiento?",a:"Porque permite llevar un control profesional de las intervenciones realizadas.",i:["Porque aumenta automáticamente la intensidad.","Porque modifica la frecuencia terapéutica."]},
-
-  {q:"¿Cuál puede ser la causa de que el equipo no encienda?",a:"Un problema en la fuente de alimentación.",i:["Un programa terapéutico incorrecto.","Una frecuencia de interferencia demasiado baja."]},
-
-  {q:"¿Cuál puede ser la causa de que un canal no funcione?",a:"Un problema en la etapa de potencia.",i:["Un problema exclusivamente del temporizador.","Una mala configuración de la pantalla."]},
-
-  {q:"¿Cuál puede ser la causa de una intensidad insuficiente?",a:"Un amplificador defectuoso.",i:["Un exceso de frecuencia portadora.","Un error de limpieza de la carcasa."]},
-
-  {q:"¿Cuál puede ser la causa de que no haya estimulación?",a:"Electrodos dañados.",i:["Un exceso de tiempo de tratamiento.","Una pantalla demasiado brillante."]},
-
-  {q:"¿Cuál puede ser la causa de un error de programa?",a:"Un problema en el microcontrolador.",i:["Una mala adherencia de un electrodo únicamente.","Una frecuencia portadora correctamente ajustada."]},
-
-  {q:"¿Cuál puede ser la causa de una señal incorrecta?",a:"Un problema en el generador de frecuencia.",i:["Una limpieza correcta de los electrodos.","Un temporizador funcionando correctamente."]},
-
-  {q:"¿Cuál es la secuencia básica de los bloques del equipo?",a:"Fuente de alimentación → microcontrolador → generadores de frecuencia → modulación → etapa de potencia → aislamiento → electrodos → paciente.",i:["Paciente → electrodos → fuente de alimentación → microcontrolador.","Electrodos → paciente → modulación → fuente de alimentación."]},
-
-  {q:"¿Qué bloque combina las dos frecuencias para producir la frecuencia terapéutica?",a:"El módulo de interferencia o modulación.",i:["La fuente de alimentación.","El sistema de aislamiento."]},
-
-  {q:"¿Qué bloque amplifica la señal antes de llegar a los electrodos?",a:"La etapa de potencia.",i:["El microcontrolador.","El temporizador."]},
-
-  {q:"¿Qué bloque protege al paciente frente a corrientes peligrosas?",a:"El sistema de aislamiento.",i:["El generador de frecuencia.","El módulo de modulación."]},
-
-  {q:"¿Qué ocurre si una corriente es de 4000 Hz y la otra de 4100 Hz?",a:"Se obtiene una frecuencia de interferencia de 100 Hz.",i:["Se obtiene una frecuencia de interferencia de 8100 Hz.","Se obtiene una frecuencia de interferencia de 4100 Hz."]},
-
-  {q:"¿Qué ocurre si una corriente es de 4000 Hz y la otra de 4010 Hz?",a:"Se obtiene una frecuencia de interferencia de 10 Hz.",i:["Se obtiene una frecuencia de interferencia de 4010 Hz.","Se obtiene una frecuencia de interferencia de 8010 Hz."]},
-
-  {q:"¿Qué tipo de aplicación utiliza dos electrodos y genera la interferencia dentro del equipo?",a:"La aplicación bipolar.",i:["La aplicación tetrapolar.","La aplicación de cuatro electrodos."]},
-
-  {q:"¿Qué tipo de aplicación utiliza cuatro electrodos y produce la interferencia dentro de los tejidos?",a:"La aplicación tetrapolar.",i:["La aplicación bipolar.","La aplicación de dos electrodos."]},
-
-  {q:"¿Qué parámetro determina principalmente la sensación percibida por el paciente?",a:"La intensidad.",i:["La frecuencia portadora exclusivamente.","La carcasa del equipo."]},
-
-  {q:"¿Qué parámetro representa la diferencia entre las dos corrientes generadas?",a:"La frecuencia de interferencia.",i:["La intensidad.","El tiempo de tratamiento."]},
-
-  {q:"¿Qué elemento permite seleccionar cuánto tiempo durará el tratamiento?",a:"El temporizador.",i:["El sistema de aislamiento.","El generador de frecuencia."]},
-
-  {q:"¿Qué debe hacerse si los electrodos presentan deterioro?",a:"Sustituir los accesorios deteriorados.",i:["Aumentar automáticamente la intensidad.","Ignorar el deterioro y continuar utilizándolos."]},
-
-  {q:"¿Qué debe verificarse después del mantenimiento?",a:"Los parámetros de salida y el correcto funcionamiento del equipo.",i:["Únicamente el aspecto exterior.","Únicamente el estado del teclado."]}
-
-  {q:"¿Qué son las corrientes rusas?",a:"Son corrientes alternas de media frecuencia moduladas en trenes de impulsos de baja frecuencia para estimular nervios motores y provocar contracciones musculares.",i:["Son corrientes continuas destinadas únicamente a producir calor.","Son corrientes de baja frecuencia utilizadas únicamente para registrar señales fisiológicas."]},
-
-  {q:"¿Cuál es la frecuencia portadora habitual de las corrientes rusas?",a:"2500 Hz.",i:["100 Hz.","50 Hz."]},
-
-  {q:"¿Cuál es la finalidad principal de las corrientes rusas?",a:"Estimular los nervios motores y provocar contracciones musculares eficaces.",i:["Registrar la actividad eléctrica del corazón.","Medir la temperatura muscular."]},
-
-  {q:"¿Para qué se utilizan terapéuticamente las corrientes rusas?",a:"Para fortalecimiento muscular, reeducación neuromuscular, prevención de atrofias y recuperación muscular.",i:["Únicamente para disminuir la temperatura corporal.","Únicamente para diagnosticar lesiones musculares."]},
-
-  {q:"¿Para qué pueden utilizarse las corrientes rusas después de una inmovilización?",a:"Para favorecer la recuperación muscular.",i:["Para impedir cualquier contracción muscular.","Para eliminar la sensibilidad de la piel."]},
-
-  {q:"¿Qué beneficio pueden aportar las corrientes rusas después de una intervención quirúrgica?",a:"Favorecer la recuperación muscular postquirúrgica.",i:["Sustituir completamente la rehabilitación.","Eliminar la necesidad de realizar cualquier movimiento."]},
-
-  {q:"¿Qué efecto tienen las corrientes rusas sobre el tono muscular?",a:"Pueden ayudar a mejorar el tono muscular.",i:["Siempre eliminan el tono muscular.","No producen ningún efecto sobre los músculos."]},
-
-  {q:"¿Qué corriente genera inicialmente el equipo de corrientes rusas?",a:"Una corriente alterna de media frecuencia de aproximadamente 2500 Hz.",i:["Una corriente continua de 50 Hz.","Una corriente alterna de 10 Hz."]},
-
-  {q:"¿Qué ocurre con la corriente portadora en las corrientes rusas?",a:"Se agrupa en ráfagas o paquetes mediante modulación.",i:["Se convierte directamente en corriente continua.","Se elimina antes de llegar al paciente."]},
-
-  {q:"¿Qué significa que una corriente de 2500 Hz esté modulada a 50 Hz?",a:"Que la corriente portadora se agrupa en ráfagas cuya frecuencia es de 50 Hz.",i:["Que la corriente portadora deja de tener 2500 Hz.","Que se suman directamente 2500 Hz y 50 Hz."]},
-
-  {q:"¿Qué frecuencia percibe principalmente el músculo en el ejemplo de una corriente portadora de 2500 Hz modulada a 50 Hz?",a:"Las ráfagas de 50 Hz.",i:["Las ráfagas de 2500 Hz como frecuencia de contracción.","Una frecuencia de 2550 Hz."]},
-
-  {q:"¿Qué respuesta produce el músculo ante las ráfagas de las corrientes rusas?",a:"Contracciones musculares sostenidas.",i:["Únicamente una sensación de frío.","Una señal fisiológica registrada por el equipo."]},
-
-  {q:"¿Por qué se utiliza media frecuencia en las corrientes rusas?",a:"Porque atraviesa mejor la piel, resulta más cómoda y permite alcanzar estructuras más profundas.",i:["Porque elimina completamente la resistencia de la piel.","Porque evita la necesidad de utilizar electrodos."]},
-
-  {q:"¿Qué resistencia presenta la piel frente a las corrientes de baja frecuencia?",a:"Una resistencia relativamente elevada.",i:["Una resistencia inexistente.","Una resistencia siempre igual a cero."]},
-
-  {q:"¿Qué ventaja tienen las corrientes de media frecuencia respecto a la comodidad del paciente?",a:"Resultan más cómodas para el paciente.",i:["Siempre producen dolor intenso.","No producen ninguna sensación."]},
-
-  {q:"¿Qué ventaja tienen las corrientes de media frecuencia respecto a la profundidad?",a:"Permiten alcanzar estructuras más profundas.",i:["Solo actúan sobre la superficie de la piel.","No pueden atravesar la piel."]},
-
-  {q:"¿Qué es la frecuencia portadora?",a:"Es la frecuencia base generada por el equipo.",i:["Es el tiempo de reposo muscular.","Es la intensidad máxima del tratamiento."]},
-
-  {q:"¿Cuál es el valor habitual de la frecuencia portadora?",a:"2500 Hz.",i:["25 Hz.","500 Hz."]},
-
-  {q:"¿Qué otros valores de frecuencia portadora pueden utilizar algunos fabricantes?",a:"2000 Hz y 4000 Hz.",i:["20 Hz y 40 Hz.","100 Hz y 200 Hz."]},
-
-  {q:"¿En qué unidad se mide la intensidad de las corrientes rusas?",a:"En miliamperios (mA).",i:["En hercios (Hz).","En segundos (s)."]},
-
-  {q:"¿Qué debe conseguir una intensidad correctamente ajustada?",a:"Una contracción muscular visible.",i:["La ausencia completa de contracción.","Una contracción necesariamente dolorosa."]},
-
-  {q:"¿Qué es el tiempo de trabajo?",a:"Es el período durante el cual el músculo permanece contraído.",i:["Es el período de relajación muscular.","Es el tiempo que tarda el equipo en encenderse."]},
-
-  {q:"¿Qué significa el tiempo de reposo?",a:"Es el período de relajación muscular entre las contracciones.",i:["Es el tiempo durante el cual el músculo permanece contraído.","Es el tiempo de carga de la fuente de alimentación."]},
-
-  {q:"¿Qué ejemplo de tiempo de trabajo aparece en los apuntes?",a:"10 segundos.",i:["1 segundo.","60 segundos."]},
-
-  {q:"¿Qué ejemplo de tiempo de reposo aparece en los apuntes?",a:"20 segundos.",i:["2 segundos.","5 segundos."]},
-
-  {q:"¿Qué es la frecuencia de modulación?",a:"Es la frecuencia que determina la frecuencia de las contracciones musculares.",i:["Es la tensión de alimentación del equipo.","Es la intensidad máxima de salida."]},
-
-  {q:"¿Qué frecuencia de modulación se utiliza habitualmente para la recuperación muscular?",a:"20-30 Hz.",i:["2-5 Hz.","80-100 Hz."]},
-
-  {q:"¿Qué frecuencia de modulación se utiliza habitualmente para el fortalecimiento muscular?",a:"35-50 Hz.",i:["1-10 Hz.","100-150 Hz."]},
-
-  {q:"¿Qué frecuencia de modulación puede utilizarse para un entrenamiento intenso?",a:"50-80 Hz.",i:["5-10 Hz.","10-15 Hz."]},
-
-  {q:"¿Qué función tienen las rampas en las corrientes rusas?",a:"Permiten una subida y bajada progresiva de la intensidad.",i:["Eliminan las contracciones musculares.","Cambian automáticamente los electrodos."]},
-
-  {q:"¿Qué ejemplo de tiempo de subida y bajada de intensidad aparece en los apuntes?",a:"2 segundos de subida y 2 segundos de bajada.",i:["10 segundos de subida y 20 segundos de bajada.","1 minuto de subida y 1 minuto de bajada."]},
-
-  {q:"¿Cuál es la señal característica de las corrientes rusas?",a:"Una onda modulada en ráfagas.",i:["Una corriente continua sin modulación.","Una señal fisiológica registrada del paciente."]},
-
-  {q:"¿Cuál es la frecuencia de la onda portadora característica de las corrientes rusas?",a:"2500 Hz.",i:["50 Hz.","20 Hz."]},
-
-  {q:"¿Qué bloque proporciona energía a todo el sistema?",a:"La fuente de alimentación.",i:["El módulo de modulación.","Los electrodos."]},
-
-  {q:"¿Qué averías puede presentar la fuente de alimentación?",a:"El equipo no enciende o presenta fallos de tensión.",i:["Únicamente contracciones irregulares.","Únicamente una intensidad errática."]},
-
-  {q:"¿Cuál es la función del generador de frecuencia?",a:"Generar la corriente alterna portadora.",i:["Controlar el tiempo de reposo.","Transmitir directamente la corriente al músculo sin amplificación."]},
-
-  {q:"¿Qué frecuencia portadora genera normalmente el generador?",a:"2500 Hz.",i:["50 Hz.","20 Hz."]},
-
-  {q:"¿Qué averías puede presentar el generador de frecuencia?",a:"Frecuencia incorrecta o ausencia de señal.",i:["Únicamente mala adherencia de los electrodos.","Únicamente errores del temporizador."]},
-
-  {q:"¿Qué parámetros controla el microcontrolador?",a:"Frecuencia, intensidad, tiempo y rampas.",i:["Únicamente la limpieza de los electrodos.","Únicamente la fuente de alimentación."]},
-
-  {q:"¿Qué averías pueden indicar un problema en el microcontrolador?",a:"Menús bloqueados, pantalla sin respuesta o errores de programación.",i:["Únicamente cables rotos.","Únicamente electrodos deteriorados."]},
-
-  {q:"¿Cuál es la función del módulo de modulación?",a:"Agrupar la señal en ráfagas.",i:["Amplificar la señal para aumentar la potencia.","Proteger físicamente los electrodos."]},
-
-  {q:"¿Qué bloque distingue especialmente a las corrientes rusas de otros equipos de electroterapia?",a:"El módulo de modulación.",i:["La fuente de alimentación.","El sistema de aislamiento."]},
-
-  {q:"¿Qué averías puede producir un fallo en la modulación?",a:"Contracciones irregulares o modulación incorrecta.",i:["Únicamente una pantalla apagada.","Únicamente una fuente de alimentación defectuosa."]},
-
-  {q:"¿Cuál es la función de la etapa de potencia?",a:"Amplificar la señal para suministrar suficiente energía y provocar la contracción muscular.",i:["Generar los programas terapéuticos.","Medir la frecuencia cardíaca del paciente."]},
-
-  {q:"¿Qué averías puede presentar la etapa de potencia?",a:"Potencia insuficiente, un canal sin funcionamiento o intensidad inestable.",i:["Únicamente errores de programación.","Únicamente mala adherencia de la pantalla."]},
-
-  {q:"¿Cuál es la función de los electrodos?",a:"Transmitir la corriente al organismo.",i:["Generar la frecuencia portadora.","Controlar el tiempo de reposo."]},
-
-  {q:"¿Qué tipos de electrodos pueden utilizarse en las corrientes rusas?",a:"Autoadhesivos y de silicona conductiva.",i:["Únicamente electrodos metálicos rígidos.","Únicamente electrodos de vidrio."]},
-
-  {q:"¿Qué problemas frecuentes pueden presentar los electrodos?",a:"Deterioro, rotura de cables y mala adherencia.",i:["Únicamente errores de programación.","Únicamente fallos del microcontrolador."]},
-
-  {q:"¿Cuál es la función del sistema de aislamiento?",a:"Garantizar la seguridad eléctrica del paciente.",i:["Generar las ráfagas de corriente.","Controlar la frecuencia de modulación."]},
-
-  {q:"¿Qué elementos pueden formar parte del sistema de aislamiento?",a:"Transformadores de aislamiento, circuitos de protección y limitadores de corriente.",i:["Únicamente potenciómetros.","Únicamente indicadores luminosos."]},
-
-  {q:"¿Qué controles puede tener un equipo de corrientes rusas?",a:"Interruptor principal, pantalla, selector de programa, intensidad, tiempos de trabajo y reposo, rampas y temporizador.",i:["Únicamente un interruptor de encendido.","Únicamente un control de frecuencia."]},
-
-  {q:"¿Qué elementos indican visualmente el estado del equipo?",a:"La pantalla y los indicadores luminosos.",i:["Los electrodos y los cables.","El sistema de aislamiento."]},
-
-  {q:"¿Qué función tienen las alarmas del equipo?",a:"Avisar de situaciones anómalas o problemas durante el funcionamiento.",i:["Generar la corriente portadora.","Sustituir el sistema de aislamiento."]},
-
-  {q:"¿Las corrientes rusas registran una señal fisiológica del paciente?",a:"No, generan una señal eléctrica para actuar sobre el organismo.",i:["Sí, registran siempre la actividad cardíaca.","Sí, registran únicamente la actividad cerebral."]},
-
-  {q:"¿Sobre qué estructuras actúan las corrientes rusas?",a:"Sobre los nervios motores, la placa neuromuscular y las fibras musculares.",i:["Únicamente sobre la piel.","Únicamente sobre los huesos."]},
-
-  {q:"¿Cuál es la respuesta observable del organismo ante las corrientes rusas?",a:"La contracción muscular.",i:["La disminución de la temperatura corporal.","La generación de una señal cardíaca."]},
-
-  {q:"¿Qué diferencia existe entre las corrientes rusas y las señales fisiológicas registradas por otros equipos?",a:"Las corrientes rusas generan una señal eléctrica para estimular, mientras que otros equipos pueden registrar señales fisiológicas.",i:["Las corrientes rusas solo registran señales fisiológicas.","Las corrientes rusas no utilizan corriente eléctrica."]},
-
-  {q:"¿Qué riesgos pueden producir las corrientes rusas?",a:"Intensidad excesiva, irritación cutánea, quemaduras y contracciones dolorosas.",i:["Únicamente una sensación de frío.","Únicamente pérdida temporal de la visión."]},
-
-  {q:"¿Qué debe comprobarse antes de aplicar las corrientes rusas?",a:"Los electrodos, los cables, la intensidad y el estado de la piel.",i:["Únicamente el tiempo de tratamiento.","Únicamente el brillo de la pantalla."]},
-
-  {q:"¿Qué debe hacerse con la intensidad antes de iniciar la aplicación?",a:"Comprobarla y ajustarla adecuadamente.",i:["Seleccionarla siempre al máximo.","Ignorarla si el equipo está encendido."]},
-
-  {q:"¿Qué debe revisarse en la piel antes de utilizar los electrodos?",a:"Que no existan lesiones cutáneas abiertas u otras alteraciones que contraindiquen la aplicación.",i:["Únicamente el color del cabello.","Únicamente la temperatura de las manos."]},
-
-  {q:"¿Cuál es una contraindicación general de las corrientes rusas?",a:"El uso de marcapasos.",i:["La realización de ejercicio físico.","La piel sin lesiones."]},
-
-  {q:"¿Qué otro dispositivo implantable constituye una contraindicación general?",a:"Los desfibriladores implantables.",i:["Los termómetros digitales.","Los tensiómetros."]},
-
-  {q:"¿El embarazo aparece como contraindicación general en los apuntes?",a:"Sí.",i:["No.","Solo durante los primeros minutos del tratamiento."]},
-
-  {q:"¿Qué tipo de lesiones cutáneas contraindican de forma general la aplicación?",a:"Las lesiones cutáneas abiertas.",i:["La piel sana.","La piel correctamente limpia."]},
-
-  {q:"¿Qué elementos se revisan durante una inspección visual?",a:"Pantalla, teclado, carcasa y conectores.",i:["Únicamente el generador de frecuencia.","Únicamente la fuente de alimentación."]},
-
-  {q:"¿Qué se comprueba durante una comprobación funcional?",a:"El encendido, el ajuste de intensidad, el cambio de programas y la temporización.",i:["Únicamente el aspecto de la carcasa.","Únicamente la frecuencia portadora."]},
-
-  {q:"¿Qué parámetros se verifican técnicamente?",a:"La frecuencia portadora, la frecuencia de modulación, la intensidad suministrada y la simetría de los canales.",i:["Únicamente la pantalla y el teclado.","Únicamente el estado de los electrodos."]},
-
-  {q:"¿Qué incluye el mantenimiento preventivo?",a:"Limpieza exterior, revisión de conexiones, sustitución de accesorios deteriorados y verificación de parámetros de salida.",i:["Cambiar siempre todos los componentes internos.","Realizar reparaciones únicamente después de una avería grave."]},
-
-  {q:"¿Por qué es importante registrar las intervenciones de mantenimiento?",a:"Para mantener un registro documental de las intervenciones realizadas.",i:["Para aumentar la frecuencia portadora.","Para eliminar la necesidad de realizar verificaciones."]},
-
-  {q:"¿Cuál puede ser la causa de que el equipo no encienda?",a:"Un problema en la fuente de alimentación.",i:["Un fallo de modulación exclusivamente.","Un electrodo correctamente colocado."]},
-
-  {q:"¿Cuál puede ser la causa de que no haya estimulación?",a:"Un cable o electrodo defectuoso.",i:["Una frecuencia portadora correctamente ajustada.","Una pantalla funcionando correctamente."]},
-
-  {q:"¿Cuál puede ser la causa de una contracción débil?",a:"Un problema en la etapa de potencia.",i:["Un error en el temporizador únicamente.","Una correcta adherencia de los electrodos."]},
-
-  {q:"¿Cuál puede ser la causa de que el programa no responda?",a:"Un problema en el microcontrolador.",i:["Un cable correctamente conectado.","Una frecuencia de modulación correcta."]},
-
-  {q:"¿Cuál puede ser la causa de una intensidad errática?",a:"Un problema en el potenciómetro o en la electrónica de control.",i:["Únicamente una buena adherencia de los electrodos.","Una frecuencia portadora correctamente generada."]},
-
-  {q:"¿Cuál puede ser la causa de una contracción irregular?",a:"Un fallo de modulación.",i:["Una limpieza correcta del equipo.","Un funcionamiento correcto del generador."]},
-
-  {q:"¿Cuál es la secuencia básica de bloques de un equipo de corrientes rusas?",a:"Fuente de alimentación → microcontrolador → generador de frecuencia → modulación → etapa de potencia → aislamiento → electrodos → paciente.",i:["Paciente → electrodos → modulación → fuente de alimentación.","Electrodos → paciente → generador → aislamiento → fuente de alimentación."]},
-
-  {q:"¿Qué bloque genera la corriente portadora?",a:"El generador de frecuencia.",i:["El módulo de modulación.","La etapa de aislamiento."]},
-
-  {q:"¿Qué bloque convierte la corriente portadora en ráfagas?",a:"El módulo de modulación.",i:["La fuente de alimentación.","Los electrodos."]},
-
-  {q:"¿Qué bloque proporciona suficiente energía para provocar la contracción muscular?",a:"La etapa de potencia.",i:["El microcontrolador.","El temporizador."]},
-
-  {q:"¿Qué bloque garantiza la seguridad eléctrica del paciente?",a:"El sistema de aislamiento.",i:["El generador de frecuencia.","El módulo de modulación."]},
-
-  {q:"¿Qué característica distingue a las corrientes rusas de otros equipos de electroterapia?",a:"La modulación de una corriente alterna de media frecuencia en ráfagas de baja frecuencia.",i:["El uso exclusivo de corriente continua.","La ausencia de electrodos."]},
-
-  {q:"¿Qué sucede si falla el módulo de modulación?",a:"Las contracciones pueden volverse irregulares.",i:["El equipo siempre aumenta la intensidad correctamente.","La fuente de alimentación se repara automáticamente."]},
-
-  {q:"¿Qué sucede si la etapa de potencia proporciona poca energía?",a:"La contracción muscular puede ser débil.",i:["La frecuencia de modulación aumenta automáticamente.","La piel deja de presentar resistencia."]},
-
-  {q:"¿Qué sucede si un electrodo está deteriorado o tiene mala adherencia?",a:"Puede disminuir o alterarse la estimulación.",i:["La frecuencia portadora aumenta automáticamente.","El microcontrolador deja de necesitar alimentación."]},
-
-  {q:"¿Qué parámetro determina el período de contracción muscular?",a:"El tiempo de trabajo.",i:["El tiempo de reposo.","La frecuencia portadora."]},
-
-  {q:"¿Qué parámetro determina el período de relajación muscular?",a:"El tiempo de reposo.",i:["La frecuencia portadora.","La intensidad máxima."]},
-
-  {q:"¿Qué parámetro determina la frecuencia de las contracciones musculares?",a:"La frecuencia de modulación.",i:["El tiempo de trabajo.","La frecuencia de la fuente de alimentación."]}
-
-  {q:"¿Qué es la iontoforesis?",a:"Es un procedimiento terapéutico basado en la aplicación de corriente continua controlada para favorecer el paso transcutáneo de sustancias medicamentosas ionizadas.",i:["Es un procedimiento basado exclusivamente en calor.","Es una técnica que utiliza únicamente corriente alterna."]},
-
-  {q:"¿En qué principio eléctrico se basa la iontoforesis?",a:"En que las cargas eléctricas del mismo signo se repelen.",i:["En que las cargas del mismo signo se atraen.","En que las cargas eléctricas no interactúan."]},
-
-  {q:"¿Qué ocurre con un medicamento con carga positiva colocado en un ánodo?",a:"Es repelido por el ánodo positivo y favorece su penetración en la piel.",i:["Es atraído hacia el ánodo y permanece en la superficie.","Es neutralizado inmediatamente por el electrodo."]},
-
-  {q:"¿Qué ocurre con un medicamento con carga negativa colocado en un cátodo?",a:"Es repelido por el cátodo negativo y favorece su penetración en la piel.",i:["Es atraído hacia el cátodo y no penetra en la piel.","Pierde automáticamente su carga eléctrica."]},
-
-  {q:"¿Qué tipo de corriente utiliza la iontoforesis?",a:"Corriente continua.",i:["Corriente alterna de media frecuencia.","Corriente modulada en ráfagas."]},
-
-  {q:"¿Cómo se denomina también la corriente continua utilizada en iontoforesis?",a:"Corriente galvánica.",i:["Corriente interferencial.","Corriente rusa."]},
-
-  {q:"¿Cuál es una característica de la corriente continua?",a:"Fluye siempre en la misma dirección.",i:["Cambia de sentido continuamente.","Solo circula durante las pausas del tratamiento."]},
-
-  {q:"¿Qué característica tiene la polaridad de la corriente continua?",a:"Tiene una polaridad fija.",i:["Cambia de polaridad constantemente.","No tiene polaridad."]},
-
-  {q:"¿La corriente continua utilizada en iontoforesis cambia de sentido?",a:"No, mantiene el mismo sentido.",i:["Sí, cambia de sentido continuamente.","Solo cambia de sentido al finalizar el tratamiento."]},
-
-  {q:"¿Para qué se utiliza terapéuticamente la iontoforesis?",a:"Para favorecer la administración transcutánea de determinados medicamentos ionizados.",i:["Para registrar la actividad eléctrica del corazón.","Para producir únicamente contracciones musculares."]},
-
-  {q:"¿Qué tipo de dolor puede tratarse mediante iontoforesis?",a:"Dolor asociado a tendinitis, bursitis y epicondilitis.",i:["Únicamente dolor producido por fracturas.","Únicamente dolor de origen cardíaco."]},
-
-  {q:"¿Para qué procesos inflamatorios puede utilizarse la iontoforesis?",a:"Para inflamaciones localizadas.",i:["Únicamente para inflamaciones generalizadas.","Únicamente para infecciones sistémicas."]},
-
-  {q:"¿Cómo puede ayudar la iontoforesis en las contracturas musculares?",a:"Puede ayudar a administrar determinados fármacos antiinflamatorios.",i:["Elimina directamente la contracción sin utilizar corriente.","Produce una inmovilización permanente del músculo."]},
-
-  {q:"¿Qué utiliza la iontoforesis para transportar medicamentos?",a:"Corriente continua.",i:["Impulsos eléctricos de baja frecuencia.","Interferencia de dos señales."]},
-
-  {q:"¿Cuál es la finalidad principal de la iontoforesis?",a:"El transporte transcutáneo de fármacos.",i:["La analgesia exclusivamente.","La contracción muscular."]},
-
-  {q:"¿Qué finalidad tiene el TENS?",a:"La analgesia.",i:["El transporte de fármacos.","El fortalecimiento muscular."]},
-
-  {q:"¿Qué finalidad tiene la estimulación muscular?",a:"Provocar contracciones musculares.",i:["Transportar medicamentos a través de la piel.","Generar únicamente analgesia."]},
-
-  {q:"¿Qué finalidad tienen las corrientes rusas?",a:"El fortalecimiento muscular.",i:["El transporte de medicamentos.","El registro de señales fisiológicas."]},
-
-  {q:"¿Qué finalidad pueden tener las corrientes interferenciales?",a:"Analgesia y estimulación.",i:["Únicamente transporte de medicamentos.","Únicamente diagnóstico eléctrico."]},
-
-  {q:"¿En qué unidad se expresa la intensidad de la iontoforesis?",a:"En miliamperios (mA).",i:["En hercios (Hz).","En segundos (s)."]},
-
-  {q:"¿Qué valores habituales de intensidad pueden utilizarse en iontoforesis?",a:"Entre 1 y 5 mA, aunque algunos equipos pueden trabajar entre 1 y 10 mA.",i:["Entre 50 y 100 mA exclusivamente.","Entre 100 y 200 mA exclusivamente."]},
-
-  {q:"¿Qué es la dosis eléctrica en iontoforesis?",a:"La cantidad expresada mediante el producto de miliamperios por minutos.",i:["La frecuencia multiplicada por la intensidad.","La tensión dividida por el tiempo."]},
-
-  {q:"¿Cómo se expresa habitualmente la dosis eléctrica?",a:"En mA × minutos.",i:["En Hz × segundos.","En voltios × hercios."]},
-
-  {q:"¿Qué dosis eléctrica se obtiene con 4 mA durante 15 minutos?",a:"60 mA-min.",i:["19 mA-min.","45 mA-min."]},
-
-  {q:"¿Qué puede provocar una intensidad excesiva durante la iontoforesis?",a:"Irritación o quemaduras.",i:["Una disminución automática de la intensidad.","Únicamente una mejora del tratamiento."]},
-
-  {q:"¿Cuál es el tiempo habitual de tratamiento en iontoforesis?",a:"Entre 10 y 30 minutos.",i:["Entre 1 y 2 minutos.","Entre 60 y 120 minutos."]},
-
-  {q:"¿Qué es el ánodo?",a:"El electrodo positivo.",i:["El electrodo negativo.","El electrodo que siempre cierra el circuito."]},
-
-  {q:"¿Qué es el cátodo?",a:"El electrodo negativo.",i:["El electrodo positivo.","El electrodo que contiene siempre el medicamento."]},
-
-  {q:"¿Qué electrodo se utiliza para un ion positivo?",a:"El ánodo.",i:["El cátodo.","El electrodo de retorno exclusivamente."]},
-
-  {q:"¿Qué electrodo se utiliza para un ion negativo?",a:"El cátodo.",i:["El ánodo.","El electrodo dispersivo exclusivamente."]},
-
-  {q:"¿Cuál es la regla fundamental de polaridad en iontoforesis?",a:"Un ion positivo se coloca en el ánodo y un ion negativo en el cátodo.",i:["Un ion positivo se coloca siempre en el cátodo.","Los medicamentos se colocan sin tener en cuenta la polaridad."]},
-
-  {q:"¿Cuál es la secuencia básica de bloques de un equipo de iontoforesis?",a:"Fuente de alimentación → microcontrolador → generador de corriente continua → control de intensidad → sistema de seguridad → electrodos → paciente.",i:["Paciente → electrodos → fuente de alimentación → microcontrolador.","Electrodos → paciente → generador → fuente de alimentación."]},
-
-  {q:"¿Cuál es la función de la fuente de alimentación?",a:"Proporcionar energía al sistema.",i:["Transportar directamente el medicamento.","Controlar exclusivamente la polaridad."]},
-
-  {q:"¿Qué averías puede presentar la fuente de alimentación?",a:"El equipo no enciende, la batería puede estar agotada o pueden existir fallos de tensión.",i:["Únicamente una polaridad incorrecta.","Únicamente una mala conductividad del electrodo."]},
-
-  {q:"¿Cuál es la función del generador de corriente continua?",a:"Producir la corriente galvánica utilizada en el tratamiento.",i:["Generar una corriente alterna de media frecuencia.","Controlar únicamente las alarmas."]},
-
-  {q:"¿Por qué es importante el generador de corriente continua?",a:"Es el bloque que diferencia a la iontoforesis de otros equipos de electroterapia.",i:["Porque sustituye a los electrodos.","Porque controla exclusivamente el tiempo."]},
-
-  {q:"¿Cuál es la función del microcontrolador en un equipo de iontoforesis?",a:"Controlar la intensidad, el tiempo, los programas y las alarmas.",i:["Transportar físicamente el medicamento.","Generar directamente la corriente sin ningún otro bloque."]},
-
-  {q:"¿Qué averías puede presentar el microcontrolador?",a:"Menús bloqueados y errores de programación.",i:["Únicamente electrodos deteriorados.","Únicamente fallos de intensidad por mala conductividad."]},
-
-  {q:"¿Cuál es la función del control de intensidad?",a:"Regular los miliamperios suministrados.",i:["Determinar qué medicamento se utiliza.","Cambiar automáticamente la polaridad del medicamento."]},
-
-  {q:"¿Qué averías puede presentar el control de intensidad?",a:"Que no modifique la intensidad o que produzca variaciones incontroladas.",i:["Únicamente que la pantalla se apague.","Únicamente que el electrodo se rompa."]},
-
-  {q:"¿Cuál es la función del sistema de seguridad?",a:"Evitar lesiones al paciente.",i:["Generar la corriente galvánica.","Contener el medicamento."]},
-
-  {q:"¿Qué elementos puede incluir el sistema de seguridad?",a:"Limitadores de corriente, sistemas de desconexión y alarmas.",i:["Únicamente electrodos activos.","Únicamente un temporizador."]},
-
-  {q:"¿Cuál es la función de los electrodos en iontoforesis?",a:"Transferir la corriente y el medicamento.",i:["Generar la corriente continua.","Controlar el programa terapéutico."]},
-
-  {q:"¿Qué es el electrodo activo?",a:"Es el electrodo que contiene el medicamento y determina la polaridad del tratamiento.",i:["Es el electrodo que únicamente cierra el circuito.","Es el electrodo que nunca entra en contacto con el paciente."]},
-
-  {q:"¿Qué es el electrodo dispersivo?",a:"Es el electrodo que cierra el circuito eléctrico y se coloca a cierta distancia del electrodo activo.",i:["Es el electrodo que siempre contiene el medicamento.","Es el electrodo que genera la corriente continua."]},
-
-  {q:"¿Dónde se coloca el electrodo dispersivo respecto al activo?",a:"A cierta distancia del electrodo activo.",i:["Siempre encima del electrodo activo.","Siempre dentro del equipo."]},
-
-  {q:"¿Qué controles e indicadores puede tener un equipo de iontoforesis?",a:"Interruptor principal, pantalla, intensidad, temporizador, indicador de polaridad, alarmas y estado de batería.",i:["Únicamente un interruptor principal.","Únicamente un indicador de intensidad."]},
-
-  {q:"¿Qué función tiene el indicador de polaridad?",a:"Mostrar la polaridad seleccionada para el tratamiento.",i:["Medir el tiempo de tratamiento.","Indicar exclusivamente el estado de la batería."]},
-
-  {q:"¿Qué riesgo puede producir una intensidad excesiva?",a:"Quemaduras químicas e irritación cutánea.",i:["Únicamente una disminución de la eficacia.","Únicamente un cambio de frecuencia."]},
-
-  {q:"¿Qué puede provocar una polaridad incorrecta?",a:"Quemaduras químicas o un tratamiento ineficaz.",i:["Una mejora automática del tratamiento.","Una reducción automática de la intensidad."]},
-
-  {q:"¿Qué puede ocurrir si el tiempo de tratamiento es excesivo?",a:"Puede aumentar el riesgo de quemaduras o irritación cutánea.",i:["El equipo cambia automáticamente de medicamento.","La corriente deja de tener polaridad."]},
-
-  {q:"¿Cuándo puede aparecer irritación cutánea por los electrodos?",a:"Cuando el electrodo está deteriorado o existe mala conductividad.",i:["Únicamente cuando la batería está completamente cargada.","Únicamente cuando el tratamiento dura menos de un minuto."]},
-
-  {q:"¿Qué puede provocar una concentración excesiva de corriente?",a:"Electrodos pequeños o un mal contacto.",i:["Una correcta colocación de los electrodos.","Una intensidad correctamente ajustada."]},
-
-  {q:"¿Qué se revisa durante una inspección visual?",a:"Carcasa, conectores y electrodos.",i:["Únicamente la fuente de alimentación.","Únicamente el microcontrolador."]},
-
-  {q:"¿Qué se comprueba durante una comprobación funcional?",a:"Encendido, ajuste de intensidad, alarmas y temporización.",i:["Únicamente el estado de la carcasa.","Únicamente la polaridad del medicamento."]},
-
-  {q:"¿Qué se comprueba durante una verificación técnica?",a:"La intensidad suministrada, la estabilidad de la corriente y la correcta polaridad.",i:["Únicamente la limpieza exterior.","Únicamente el estado de la batería."]},
-
-  {q:"¿Qué incluye el mantenimiento preventivo de un equipo de iontoforesis?",a:"Limpieza exterior, comprobación de conectores, sustitución de electrodos deteriorados y verificación de controles.",i:["Cambiar todos los componentes internos periódicamente.","Realizar mantenimiento únicamente después de una avería."]},
-
-  {q:"¿Qué parámetros deben comprobarse durante el mantenimiento?",a:"La intensidad y la polaridad.",i:["Únicamente el brillo de la pantalla.","Únicamente el estado de la carcasa."]},
-
-  {q:"¿Por qué es importante registrar el mantenimiento realizado?",a:"Para mantener un registro de las intervenciones realizadas sobre el equipo.",i:["Para aumentar automáticamente la intensidad.","Para modificar la polaridad del tratamiento."]},
-
-  {q:"¿Cuál puede ser la causa de que el equipo no encienda?",a:"Un problema en la fuente de alimentación.",i:["Una polaridad correcta.","Un electrodo correctamente colocado."]},
-
-  {q:"¿Cuál puede ser la causa de que el equipo no suministre corriente?",a:"Un fusible defectuoso o un problema electrónico.",i:["Una dosis correctamente calculada.","Una buena conductividad del electrodo."]},
-
-  {q:"¿Cuál puede ser la causa de un dolor excesivo durante el tratamiento?",a:"Una intensidad elevada.",i:["Una intensidad demasiado baja.","Una correcta polaridad."]},
-
-  {q:"¿Cuál puede ser la causa de una irritación cutánea?",a:"Un electrodo deteriorado.",i:["Una fuente de alimentación nueva.","Un temporizador correctamente ajustado."]},
-
-  {q:"¿Cuál puede ser la causa de que el tratamiento sea ineficaz?",a:"Una polaridad incorrecta.",i:["Una polaridad correctamente seleccionada.","Una intensidad correctamente controlada."]},
-
-  {q:"¿Cuál puede ser la causa de un mensaje de error?",a:"Un fallo de conexión.",i:["Una correcta colocación de los electrodos.","Una dosis eléctrica correctamente calculada."]},
-
-  {q:"¿Qué sucede si el medicamento es un ion positivo?",a:"Debe colocarse en el ánodo positivo para favorecer su penetración por repulsión eléctrica.",i:["Debe colocarse en el cátodo negativo porque las cargas opuestas se repelen.","No importa en qué electrodo se coloque."]},
-
-  {q:"¿Qué sucede si el medicamento es un ion negativo?",a:"Debe colocarse en el cátodo negativo para favorecer su penetración por repulsión eléctrica.",i:["Debe colocarse en el ánodo positivo porque las cargas opuestas se repelen.","No necesita ningún electrodo."]},
-
-  {q:"¿Qué electrodo contiene el medicamento durante la iontoforesis?",a:"El electrodo activo.",i:["El electrodo dispersivo.","El electrodo de retorno exclusivamente."]},
-
-  {q:"¿Qué electrodo cierra el circuito eléctrico?",a:"El electrodo dispersivo.",i:["El electrodo activo.","El electrodo de alimentación."]},
-
-  {q:"¿Qué diferencia fundamental existe entre la iontoforesis y las corrientes interferenciales?",a:"La iontoforesis utiliza corriente continua para favorecer el transporte de medicamentos, mientras que las interferenciales utilizan la interferencia de corrientes de media frecuencia.",i:["Ambas utilizan exactamente el mismo tipo de corriente.","La iontoforesis utiliza únicamente corrientes rusas."]},
-
-  {q:"¿Qué diferencia fundamental existe entre la iontoforesis y las corrientes rusas?",a:"La iontoforesis utiliza corriente continua para transportar medicamentos, mientras que las corrientes rusas buscan provocar contracciones musculares.",i:["Ambas tienen como finalidad principal transportar medicamentos.","Las corrientes rusas utilizan corriente continua para transportar fármacos."]},
-
-  {q:"¿Qué diferencia fundamental existe entre la iontoforesis y la estimulación muscular?",a:"La iontoforesis busca transportar sustancias medicamentosas mediante corriente continua, mientras que la estimulación muscular busca provocar contracciones.",i:["Ambas tienen como único objetivo transportar medicamentos.","La iontoforesis busca únicamente fortalecer los músculos."]},
-
-  {q:"¿Qué parámetro resulta especialmente importante para controlar la dosis eléctrica?",a:"La intensidad y el tiempo de tratamiento.",i:["Únicamente el tamaño de la carcasa.","Únicamente el estado de la pantalla."]},
-
-  {q:"¿Cómo se calcula la dosis eléctrica de un tratamiento de iontoforesis?",a:"Multiplicando la intensidad en miliamperios por el tiempo en minutos.",i:["Multiplicando la frecuencia por la intensidad.","Dividiendo el tiempo entre la intensidad."]}
-  ];
-
-function actualizarContador(){
-  document.getElementById("contador").textContent =
-  respondidas + " / " + preguntas.length;
-
-  let porcentaje = (respondidas / preguntas.length) * 100;
-  document.getElementById("barraGlobal").style.width = porcentaje + "%";
-}
-
-function iniciar(){
-
-  if(preguntas.length === 0){
-    app.innerHTML = "<div class='card'>⚠️ No hay preguntas</div>";
-    return;
-  }
-
-  if(!jugador){
-    jugador = prompt("Pon tu nombre:");
-    localStorage.setItem("jugador", jugador);
-  }
-
-  if(pool.length === 0){
-    pool = [...preguntas].sort(()=>Math.random()-0.5);
-  }
-
-  i=0;
-  ok=0;
-  racha=0;
-  tiempo=TIEMPO_TOTAL;
-
-  juego = pool.slice(indiceGlobal, indiceGlobal + POR_PARTIDA);
-
-  if(juego.length === 0){
-    pool = [...preguntas].sort(()=>Math.random()-0.5);
-    indiceGlobal = 0;
-    respondidas = 0;
-    juego = pool.slice(0, POR_PARTIDA);
-  }
-
-  indiceGlobal += POR_PARTIDA;
-
-  document.getElementById("progress").innerHTML =
-  Array.from({length:POR_PARTIDA},()=>'<div class="square"></div>').join("");
-
-  actualizarContador();
-
-  clearInterval(intervalo);
-  intervalo=setInterval(()=>{
-    tiempo--;
-    document.getElementById("timer").textContent =
-    Math.floor(tiempo/60)+":"+String(tiempo%60).padStart(2,'0');
-    if(tiempo<=0)resultado();
-  },1000);
-
-  mostrar();
-}
-
-function mostrar(){
-
-  if(i>=juego.length){resultado();return;}
-
-  let p=juego[i];
-
-  if(p.tipo==="drag"){mostrarDrag(p);return;}
-
-  let ops=[p.a,...p.i].sort(()=>Math.random()-0.5);
-
-  app.innerHTML=`<div class="card">
-  <h3>${i+1}. ${p.q}</h3>
-  ${ops.map(o=>`<button onclick="responder(this,'${p.a}')">${o}</button>`).join("")}
-  </div>`;
-}
-
-function responder(btn,resp){
-
-  let botones=document.querySelectorAll("button");
-  botones.forEach(b=>b.disabled=true);
-
-  let sq=document.querySelectorAll(".square")[i];
-
-  if(btn.innerText===resp){
-    btn.classList.add("correct");
-    sq.classList.add("ok");
-    ok++;
-    racha++;
-  }else{
-    btn.classList.add("incorrect");
-    btn.innerText="INÚTIL ❌";
-    sq.classList.add("ko");
-    racha=0;
-
-    botones.forEach(b=>{
-      if(b.innerText===resp){
-        b.classList.add("correct");
+  <div id="racha" class="racha"></div>
+  <div id="app"></div>
+
+  <script>
+    const app = document.getElementById("app");
+    const progressEl = document.getElementById("progress");
+    const contadorEl = document.getElementById("contador");
+    const timerEl = document.getElementById("timer");
+    const barraGlobal = document.getElementById("barraGlobal");
+    const rachaEl = document.getElementById("racha");
+
+    const POR_PARTIDA = 20;
+    const TIEMPO_TOTAL = 1200;
+
+    let juego = [];
+    let i = 0;
+    let ok = 0;
+    let tiempo = TIEMPO_TOTAL;
+    let intervalo = null;
+    let racha = 0;
+    let respondidas = 0;
+    let pool = [];
+    let indiceGlobal = 0;
+    let jugador = localStorage.getItem("jugador") || "Jugador";
+
+    const preguntas = [
+      { q: "¿Cuál es la función de la fuente de alimentación en un sistema de rehabilitación?", a: "Suministrar la energía necesaria para el funcionamiento del equipo", i: ["Generar directamente la corriente terapéutica", "Medir la temperatura del paciente", "Controlar la frecuencia cardiaca"] },
+      { q: "¿Cuál de estos elementos puede formar parte de una fuente de alimentación?", a: "Baterías", i: ["Microcontroladores", "Electrodos", "Pantalla táctil"] },
+      { q: "¿Qué parámetro de la fuente de alimentación es importante conocer?", a: "La tensión de entrada y salida", i: ["La frecuencia cardiaca del paciente", "La distancia entre electrodos", "El color de la carcasa"] },
+      { q: "¿Qué elemento permite almacenar energía para utilizarla posteriormente?", a: "Una batería recargable", i: ["Un optoacoplador", "Un osciloscopio", "Un teclado"] },
+      { q: "¿Cuál es la función principal del microcontrolador?", a: "Gobernar el funcionamiento del equipo", i: ["Generar directamente la corriente terapéutica", "Proteger físicamente al paciente", "Cambiar la temperatura ambiente"] },
+      { q: "¿Qué parámetros puede controlar el microcontrolador?", a: "Intensidad, frecuencia, anchura de pulso y tiempo de tratamiento", i: ["Solo la tensión de entrada", "Únicamente la temperatura del paciente", "La distancia entre electrodos"] },
+      { q: "¿Cuál es la función del generador de impulsos?", a: "Producir la señal eléctrica que posteriormente se aplicará al paciente", i: ["Amplificar la señal hasta el nivel final", "Proteger al paciente", "Mostrar la batería"] },
+      { q: "¿Qué tipo de señal puede generar un generador de impulsos?", a: "Ondas rectangulares", i: ["Únicamente señales acústicas", "Solo señales procedentes de la batería", "Señales de luz"] },
+      { q: "¿Cuál es la función de la etapa de potencia?", a: "Amplificar la señal generada para que pueda aplicarse al paciente", i: ["Crear las órdenes del usuario", "Medir el estado de la piel", "Seleccionar la fuente de alimentación"] },
+      { q: "¿Por qué es necesaria la etapa de potencia?", a: "Porque la señal del generador es demasiado pequeña", i: ["Porque el paciente necesita más pintura", "Porque el microcontrolador no puede medir", "Porque la batería no funciona"] },
+      { q: "¿Qué bloque tiene como prioridad proteger al paciente frente a riesgos eléctricos?", a: "El sistema de aislamiento eléctrico", i: ["El generador de impulsos", "El control de intensidad", "La pantalla del equipo"] },
+      { q: "¿Cuál es la función del control de intensidad?", a: "Ajustar la amplitud del estímulo", i: ["Generar la forma de onda", "Aislar eléctricamente al paciente", "Analizar la zona anatómica"] },
+      { q: "¿Qué regula el control de intensidad?", a: "Los miliamperios suministrados al paciente", i: ["La frecuencia de la red eléctrica", "La distancia entre electrodos", "El color del equipo"] },
+      { q: "¿Qué es la electroterapia?", a: "Una técnica de rehabilitación basada en la aplicación controlada de corrientes eléctricas", i: ["Una técnica basada en ultrasonidos", "Un método para medir a la persona", "Un tratamiento farmacológico"] },
+      { q: "¿Qué objetivos terapéuticos tiene la electroterapia?", a: "Analgesia, estimulación muscular y mejora de la circulación", i: ["Solo diagnóstico por imagen", "Solo aumento de la temperatura", "Solo reparación de huesos"] },
+      { q: "¿Qué diferencia existe entre estimulación sensitiva y motora?", a: "La sensitiva busca analgesia sin contracción muscular y la motora provoca contracciones", i: ["La sensitiva siempre provoca dolor", "La sensitiva no usa corriente", "La motora no genera movimiento"] },
+      { q: "¿Qué equipo es típico de la estimulación sensitiva?", a: "TENS", i: ["EMS", "Rayos X", "Ultrasonido"] },
+      { q: "¿Qué equipo es típico de la estimulación motora?", a: "EMS", i: ["TENS", "Ecógrafo", "Báscula"] },
+      { q: "¿Qué tipo de corriente utiliza la iontoforesis?", a: "Corriente continua", i: ["Corriente alterna", "Corriente modulada en ráfagas", "Corriente de radio"] },
+      { q: "¿Qué finalidad tiene el TENS?", a: "La analgesia", i: ["Transportar medicamentos", "Fortalecer musculatura", "Diagnosticar fracturas"] },
+      { q: "¿Qué es una onda bifásica simétrica?", a: "Una onda bipolar con forma simétrica", i: ["Una corriente continua", "Una onda sin polaridad", "Una señal acústica"] },
+      { q: "¿Qué se utiliza para transportar la corriente al paciente?", a: "Los electrodos", i: ["Las baterías del móvil", "La pantalla del equipo", "El motor del aparato"] },
+      { q: "¿Qué riesgos pueden producirse durante la electroestimulación?", a: "Quemaduras, irritación cutánea y colocación incorrecta de electrodos", i: ["Solo pérdida de batería", "Solo problema de pantalla", "Solo ruido del equipo"] },
+      { q: "¿Qué es la frecuencia portadora en corrientes rusas?", a: "La frecuencia base generada por el equipo", i: ["El tiempo total del tratamiento", "La intensidad máxima del paciente", "El color del electrodo"] },
+      { q: "¿Qué diferencia existe entre corrientes rusas e interferenciales?", a: "Las rusas moduladas en ráfagas y las interferenciales por interferencia de dos corrientes", i: ["Las rusas son solo de diagnóstico", "Las interferenciales nunca se usan en rehabilitación", "Las rusas usan solo ultrasonido"] },
+      { q: "¿Qué es el ánodo?", a: "El electrodo positivo", i: ["El electrodo negativo", "El cable de alimentación", "La pantalla"] },
+      { q: "¿Qué es el cátodo?", a: "El electrodo negativo", i: ["El electrodo positivo", "El temporizador", "El potenciómetro"] },
+      { q: "¿Qué debe hacerse con los electrodos deteriorados?", a: "Sustituirlos", i: ["Mantenerlos sin revisar", "Aumentar la intensidad", "Olvidarlos"] },
+      { q: "¿Qué debe comprobarse durante el mantenimiento preventivo?", a: "Los parámetros de salida y el funcionamiento del equipo", i: ["Solo el peso del equipo", "Solo el color de la carcasa", "La temperatura ambiente"] },
+      { q: "¿Cuál es una contraindicación general para la electroestimulación?", a: "Marcapasos o desfibrilador implantado", i: ["Piel sana", "Uso de electrodos en zonas permitidas", "Rehabilitación muscular"] },
+      { q: "¿Qué parámetro determina la frecuencia de las contracciones musculares en corrientes rusas?", a: "La frecuencia de modulación", i: ["El tiempo total de tratamiento", "La temperatura del paciente", "La longitud del cable"] }
+    ];
+
+    function mezclar(array) {
+      const copia = [...array];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
       }
-    });
-  }
+      return copia;
+    }
 
-  respondidas++;
-  actualizarContador();
+    function formatearTiempo(segundos) {
+      const mins = Math.floor(segundos / 60);
+      const secs = segundos % 60;
+      return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
 
-  document.getElementById("racha").innerHTML =
-  racha>=3?`🔥 ${racha}`:"";
+    function actualizarContador() {
+      contadorEl.textContent = `${respondidas} / ${juego.length}`;
+    }
 
-  setTimeout(()=>{
-    i++;
-    mostrar();
-  },1200);
-}
+    function actualizarBarraGlobal() {
+      const porcentaje = (ok / Math.max(1, juego.length)) * 100;
+      barraGlobal.style.width = `${porcentaje}%`;
+    }
 
-// DRAG
-let dragged;
+    function renderProgress() {
+      progressEl.innerHTML = "";
+      for (let i = 0; i < POR_PARTIDA; i++) {
+        const sq = document.createElement("div");
+        sq.className = "square";
+        if (i < respondidas) {
+          sq.classList.add(juego[i] && juego[i].acierto === true ? "ok" : "ko");
+        }
+        progressEl.appendChild(sq);
+      }
+    }
 
-function mostrarDrag(p){
+    function empezarTiempo() {
+      clearInterval(intervalo);
+      intervalo = setInterval(() => {
+        tiempo--;
+        timerEl.textContent = formatearTiempo(tiempo);
 
-  app.innerHTML=`<div class="card">
-  <h3>${p.q}</h3>
-  <img src="${p.img}" style="width:100%">
-  ${p.zonas.map(z=>`<div class="drop" data-correct="${z}"></div>`).join("")}
-  ${p.opciones.map(o=>`<div class="drag" draggable="true" data-name="${o}">${o}</div>`).join("")}
-  <button onclick="checkDrag()">Comprobar</button>
-  </div>`;
+        if (tiempo <= 0) {
+          clearInterval(intervalo);
+          finJuego();
+        }
+      }, 1000);
+    }
 
-  document.querySelectorAll(".drag").forEach(d=>{
-    d.ondragstart=()=>dragged=d;
-  });
+    function mostrarPregunta() {
+      if (i >= juego.length) {
+        finJuego();
+        return;
+      }
 
-  document.querySelectorAll(".drop").forEach(z=>{
-    z.ondragover=e=>e.preventDefault();
-    z.ondrop=e=>{
-      if(!z.firstChild)z.appendChild(dragged);
-    };
-  });
-}
+      const pregunta = juego[i];
+      const opciones = mezclar([pregunta.a, ...pregunta.i]);
 
-function checkDrag(){
+      app.innerHTML = `
+        <div class="card">
+          <h3>${i + 1}. ${pregunta.q}</h3>
+          ${opciones.map((opcion) => `
+            <button data-opcion="${opcion}">${opcion}</button>
+          `).join("")}
+        </div>
+      `;
 
-  let correct=0;
-  document.querySelectorAll(".drop").forEach(z=>{
-    if(z.firstChild && z.firstChild.dataset.name===z.dataset.correct)correct++;
-  });
+      app.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => responder(btn.dataset.opcion));
+      });
 
-  let sq=document.querySelectorAll(".square")[i];
+      actualizarContador();
+      renderProgress();
+    }
 
-  if(correct===document.querySelectorAll(".drop").length){
-    sq.classList.add("ok");
-    ok++;
-    racha++;
-  }else{
-    sq.classList.add("ko");
-    racha=0;
-  }
+    function responder(opcion) {
+      const pregunta = juego[i];
+      const botones = app.querySelectorAll("button");
+      const acierto = opcion === pregunta.a;
 
-  respondidas++;
-  actualizarContador();
+      botones.forEach((btn) => {
+        btn.disabled = true;
+        if (btn.dataset.opcion === pregunta.a) btn.classList.add("correct");
+        if (btn.dataset.opcion === opcion && !acierto) btn.classList.add("incorrect");
+      });
 
-  setTimeout(()=>{
-    i++;
-    mostrar();
-  },1200);
-}
+      juego[i].acierto = acierto;
 
-function resultado(){
+      if (acierto) {
+        ok++;
+        racha++;
+        rachaEl.textContent = "¡Racha! " + "⭐".repeat(Math.min(racha, 5));
+      } else {
+        racha = 0;
+        rachaEl.textContent = "Sigue intentándolo";
+      }
 
-  clearInterval(intervalo);
+      respondidas = Math.min(i + 1, juego.length);
+      actualizarContador();
+      actualizarBarraGlobal();
+      renderProgress();
 
-  let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
+      setTimeout(() => {
+        i++;
+        if (i < juego.length) {
+          mostrarPregunta();
+        } else {
+          finJuego();
+        }
+      }, 800);
+    }
 
-  ranking.push({
-    nombre: jugador,
-    aciertos: ok
-  });
+    function finJuego() {
+      clearInterval(intervalo);
+      const score = Math.round((ok / juego.length) * 100);
+      const mensaje = score >= 70 ? "¡Muy bien!" : score >= 50 ? "Buen intento" : "Sigue practicando";
 
-  ranking.sort((a,b)=>b.aciertos - a.aciertos);
-  ranking = ranking.slice(0,10);
+      app.innerHTML = `
+        <div class="card resumen">
+          <h2>Fin de la partida</h2>
+          <p><strong>Jugador:</strong> ${jugador}</p>
+          <p><strong>Respuestas correctas:</strong> ${ok} / ${juego.length}</p>
+          <p><strong>Porcentaje:</strong> ${score}%</p>
+          <p><strong>Resultado:</strong> ${mensaje}</p>
+          <button id="resetBtn">Jugar otra vez</button>
+        </div>
+      `;
 
-  localStorage.setItem("ranking", JSON.stringify(ranking));
+      document.getElementById("resetBtn").addEventListener("click", iniciarPartida);
+      rachaEl.textContent = "";
+    }
 
-  app.innerHTML=`<div class="card">
-  <h2>${ok>=14?"🔥 CRACK":"ESTUDIA MÁS INÚTIL"}</h2>
-  <p>${ok}/20</p>
+    function iniciarPartida() {
+      juego = mezclar(preguntas).slice(0, POR_PARTIDA);
+      i = 0;
+      ok = 0;
+      respondidas = 0;
+      tiempo = TIEMPO_TOTAL;
+      racha = 0;
+      timerEl.textContent = formatearTiempo(tiempo);
+      barraGlobal.style.width = "0%";
+      rachaEl.textContent = "";
+      empezarTiempo();
+      mostrarPregunta();
+    }
 
-  <h3>🏆 Ranking</h3>
-  ${ranking.map(r=>`<div>${r.nombre} - ${r.aciertos}</div>`).join("")}
-
-  <button onclick="iniciar()">Siguiente bloque</button>
-  </div>`;
-}
-
-iniciar();
-
-</script>
+    jugador = prompt("Introduce tu nombre", jugador) || jugador;
+    localStorage.setItem("jugador", jugador);
+    iniciarPartida();
+  </script>
 </body>
 </html>
