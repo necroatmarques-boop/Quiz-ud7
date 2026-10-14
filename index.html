@@ -230,6 +230,7 @@ const barraGlobalEl = document.getElementById("barraGlobal");
 const rachaEl = document.getElementById("racha");
 
 const POR_PARTIDA = 20;
+  let pendientes = [];
 
 let juego = [];
 let i = 0;
@@ -539,8 +540,13 @@ function fin() {
   rachaEl.textContent = "";
 }
 
+
 function iniciar() {
-  juego = mezclar(preguntas).slice(0, POR_PARTIDA);
+  if (pendientes.length === 0) {
+    pendientes = mezclar(preguntas);
+  }
+
+  juego = pendientes.splice(0, POR_PARTIDA);
 
   i = 0;
   ok = 0;
@@ -555,6 +561,7 @@ function iniciar() {
   renderProgress();
   mostrar();
 }
+
 
 iniciar();
 </script>
