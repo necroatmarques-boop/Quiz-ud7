@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test 100 preguntas Juanjo</title>
+<title>Test de 20 preguntas</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -51,22 +51,14 @@ h1 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.square.ok { 
+.square.ok {
   background: #10b981;
   box-shadow: 0 0 8px rgba(16,185,129,0.6);
 }
 
-.square.ko { 
+.square.ko {
   background: #ef4444;
   box-shadow: 0 0 8px rgba(239,68,68,0.6);
-}
-
-#timer {
-  font-weight: bold;
-  min-width: 70px;
-  text-align: right;
-  color: #fff;
-  font-size: 18px;
 }
 
 #contador {
@@ -198,13 +190,9 @@ button:disabled {
 }
 
 @media (max-width: 768px) {
-  h1 {
-    font-size: 22px;
-  }
-  
-  .button-group {
-    flex-direction: column;
-  }
+  h1 { font-size: 22px; }
+
+  .button-group { flex-direction: column; }
 
   #progress {
     grid-template-columns: repeat(10, 1fr);
@@ -228,39 +216,27 @@ button:disabled {
 
 <div id="topbar">
   <div id="progress"></div>
-
-  <div style="display:flex;flex-direction:column;align-items:flex-end;">
-    <div id="contador">Aciertos: 0 | Fallos: 0</div>
-    <div id="timer">60</div>
-  </div>
+  <div id="contador">Aciertos: 0 | Fallos: 0</div>
 </div>
 
 <div id="racha" class="racha"></div>
 <div id="app"></div>
 
 <script>
-
 const app = document.getElementById("app");
 const progressEl = document.getElementById("progress");
 const contadorEl = document.getElementById("contador");
-const timerEl = document.getElementById("timer");
 const barraGlobalEl = document.getElementById("barraGlobal");
 const rachaEl = document.getElementById("racha");
 
-const POR_PARTIDA = 100;
-const TIEMPO_PREGUNTA = 15;
+const POR_PARTIDA = 20;
 
 let juego = [];
 let i = 0;
 let ok = 0;
 let fallos = 0;
-let tiempo = TIEMPO_PREGUNTA;
-let intervalo;
-let timeoutPregunta;
 let racha = 0;
-
 let respondidas = 0;
-let jugador = localStorage.getItem("jugador") || "";
 
 // 👉 PEGA AQUÍ TUS PREGUNTAS
 const preguntas = [
@@ -401,45 +377,44 @@ const preguntas = [
 {q:"¿Qué parámetros y funciones se pueden supervisar mediante la monitorización central de esta unidad?",a:"Parámetros cardiopulmonares, hemodinámicos y gasométricos.",i:["Únicamente el peso y la longitud del recién nacido.","Solo la temperatura ambiental de la habitación."]},
 {q:"¿Qué sistema permite realizar una monitorización continua de la actividad cerebral del recién nacido?",a:"La monitorización EEG continua mediante aEEG.",i:["La ecografía de alta resolución por sí sola.","La monitorización de presión arterial sin registro cerebral."]},
 
-
-
-
 ];
 
-function mezclar(array){
+function mezclar(array) {
   const copia = [...array];
-  for(let i = copia.length - 1; i > 0; i--){
+
+  for (let i = copia.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [copia[i], copia[j]] = [copia[j], copia[i]];
   }
+
   return copia;
 }
 
-function actualizarContador(){
+function actualizarContador() {
   contadorEl.textContent = `Aciertos: ${ok} | Fallos: ${fallos}`;
 }
 
-function actualizarBarra(){
+function actualizarBarra() {
   const pct = (respondidas / Math.max(1, juego.length)) * 100;
   barraGlobalEl.style.width = `${pct}%`;
 }
 
-function actualizarRacha(){
-  if(racha > 0){
-    rachaEl.textContent = "¡Racha! " + "⭐".repeat(Math.min(racha,5));
+function actualizarRacha() {
+  if (racha > 0) {
+    rachaEl.textContent = "¡Racha! " + "⭐".repeat(Math.min(racha, 5));
   } else {
     rachaEl.textContent = "";
   }
 }
 
-function renderProgress(){
+function renderProgress() {
   progressEl.innerHTML = "";
 
-  for(let j = 0; j < juego.length; j++){
+  for (let j = 0; j < juego.length; j++) {
     const sq = document.createElement("div");
     sq.className = "square";
 
-    if(j < respondidas){
+    if (j < respondidas) {
       sq.classList.add(
         juego[j] && juego[j].acierto ? "ok" : "ko"
       );
@@ -449,67 +424,8 @@ function renderProgress(){
   }
 }
 
-function iniciarTemporizador(){
-  clearInterval(intervalo);
-  clearTimeout(timeoutPregunta);
-
-  tiempo = TIEMPO_PREGUNTA;
-  timerEl.textContent = tiempo;
-
-  intervalo = setInterval(() => {
-    tiempo--;
-    timerEl.textContent = tiempo;
-
-    if(tiempo <= 0){
-      clearInterval(intervalo);
-    }
-  }, 1000);
-
-  timeoutPregunta = setTimeout(() => {
-    tiempoAgotado();
-  }, TIEMPO_PREGUNTA * 1000);
-}
-
-function tiempoAgotado(){
-  clearInterval(intervalo);
-
-  const preg = juego[i];
-
-  // La pregunta sin responder cuenta como fallo
-  preg.acierto = false;
-  preg.sinResponder = true;
-
-  fallos++;
-  racha = 0;
-
-  respondidas = Math.min(i + 1, juego.length);
-
-  actualizarContador();
-  actualizarBarra();
-  renderProgress();
-  actualizarRacha();
-
-  const btns = app.querySelectorAll("button");
-  btns.forEach(btn => {
-    btn.disabled = true;
-    if(btn.dataset.ans === preg.a){
-      btn.classList.add("correct");
-    }
-  });
-
-  setTimeout(() => {
-    i++;
-
-    if(i < juego.length){
-      mostrar();
-    } else {
-      fin();
-    }
-  }, 500);
-}
-
-function mostrar(){
-  if(i >= juego.length){
+function mostrar() {
+  if (i >= juego.length) {
     fin();
     return;
   }
@@ -532,13 +448,9 @@ function mostrar(){
 
   actualizarContador();
   renderProgress();
-  iniciarTemporizador();
 }
 
-function responder(resp){
-  clearInterval(intervalo);
-  clearTimeout(timeoutPregunta);
-
+function responder(resp) {
   const preg = juego[i];
   const btns = app.querySelectorAll("button");
   const ok_resp = resp === preg.a;
@@ -546,18 +458,18 @@ function responder(resp){
   btns.forEach(btn => {
     btn.disabled = true;
 
-    if(btn.dataset.ans === preg.a){
+    if (btn.dataset.ans === preg.a) {
       btn.classList.add("correct");
     }
 
-    if(btn.dataset.ans === resp && !ok_resp){
+    if (btn.dataset.ans === resp && !ok_resp) {
       btn.classList.add("incorrect");
     }
   });
 
   preg.acierto = ok_resp;
 
-  if(ok_resp){
+  if (ok_resp) {
     ok++;
     racha++;
   } else {
@@ -575,7 +487,7 @@ function responder(resp){
   setTimeout(() => {
     i++;
 
-    if(i < juego.length){
+    if (i < juego.length) {
       mostrar();
     } else {
       fin();
@@ -583,10 +495,7 @@ function responder(resp){
   }, 800);
 }
 
-function fin(){
-  clearInterval(intervalo);
-  clearTimeout(timeoutPregunta);
-
+function fin() {
   const score = Math.round((ok / juego.length) * 100);
 
   const msg =
@@ -599,11 +508,6 @@ function fin(){
   app.innerHTML = `
     <div class="card resumen">
       <h2>🎯 Test terminado</h2>
-      
-      <div class="stat-box">
-        <span>Jugador:</span>
-        <strong>${jugador}</strong>
-      </div>
 
       <div class="stat-box">
         <span>Respuestas correctas:</span>
@@ -627,30 +531,15 @@ function fin(){
 
       <div class="button-group">
         <button id="resetBtn">🎮 Jugar otra vez</button>
-        <button id="cambiarNombreBtn">👤 Otro jugador</button>
       </div>
     </div>
   `;
 
   document.getElementById("resetBtn").addEventListener("click", iniciar);
-
-  document.getElementById("cambiarNombreBtn").addEventListener("click", () => {
-    const nuevoNombre = prompt("¿Cuál es tu nombre?", jugador);
-
-    if(nuevoNombre && nuevoNombre.trim()){
-      jugador = nuevoNombre.trim();
-      localStorage.setItem("jugador", jugador);
-      iniciar();
-    }
-  });
-
   rachaEl.textContent = "";
 }
 
-function iniciar(){
-  clearInterval(intervalo);
-  clearTimeout(timeoutPregunta);
-
+function iniciar() {
   juego = mezclar(preguntas).slice(0, POR_PARTIDA);
 
   i = 0;
@@ -658,9 +547,7 @@ function iniciar(){
   fallos = 0;
   respondidas = 0;
   racha = 0;
-  tiempo = TIEMPO_PREGUNTA;
 
-  timerEl.textContent = TIEMPO_PREGUNTA;
   barraGlobalEl.style.width = "0%";
   rachaEl.textContent = "";
 
@@ -669,17 +556,8 @@ function iniciar(){
   mostrar();
 }
 
-const nombreIngresado = prompt("¿Cuál es tu nombre?", jugador);
-
-if(nombreIngresado && nombreIngresado.trim()){
-  jugador = nombreIngresado.trim();
-}
-
-localStorage.setItem("jugador", jugador);
-
 iniciar();
-
 </script>
+
 </body>
 </html>
-```
